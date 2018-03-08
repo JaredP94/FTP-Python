@@ -28,6 +28,7 @@ class FtpServerProtocol(threading.Thread):
         self.cwd           = CWD
         self.commSock      = commSock   # communication socket as command channel
         self.address       = address
+        self.mode          = 'A'
 
     def run(self):
         """
@@ -85,7 +86,10 @@ class FtpServerProtocol(threading.Thread):
         self.commSock.send(cmd.encode('utf-8'))
 
     def sendData(self, data):
-        self.dataSock.send(data.encode('utf-8'))
+        if self.mode == 'I':
+            self.dataSock.send(data)
+        else:
+            self.dataSock.send(data.encode('utf-8'))
 
     #------------------------------#
     ## Ftp services and functions ##
@@ -299,7 +303,7 @@ class FtpServerProtocol(threading.Thread):
 
         self.startDataSock( )
         while True:
-            data = file.read(1024)
+            data = file.read(1048576)
             if not data: break
             self.sendData(data)
         file.close( )
@@ -325,7 +329,10 @@ class FtpServerProtocol(threading.Thread):
         self.sendCommand('150 Opening data connection.\r\n' )
         self.startDataSock( )
         while True:
-            data = self.dataSock.recv(1024).decode('utf-8')
+            if self.mode == 'I':
+                data = self.dataSock.recv(1048576)
+            else:
+                data = self.dataSock.recv(1048576).decode('utf-8')
             if not data: break
             file.write(data)
         file.close( )

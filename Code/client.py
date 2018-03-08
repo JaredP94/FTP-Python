@@ -55,8 +55,8 @@ def sendfile(file=''):
 	size = os.stat(filepath)[6]
 	opened = True
 	pos = 0
-	buff = 1024
-	packs = size/1024
+	buff = 1048576
+	packs = size/1048576
 	timeb = 100/packs
 	i=0
 
@@ -88,16 +88,15 @@ def recievefile(file=''):
 	p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	p.connect((newip, newport))
 	action('RETR '+file)
-	newfile = open(file, 'w')
+	newfile = open(file, 'wb')
 	msg=''
 	aux=':)'
 
-	while aux != "":
+	while aux != b'':
 		time.sleep(.05)
 		sys.stdout.write("\r" "wait")
 		sys.stdout.flush()
-		aux = p.recv(1024)
-		aux=aux.decode(errors='ignore')
+		aux = p.recv(1048576)
 		newfile.write(aux)
 	newfile.close()
 
@@ -160,7 +159,7 @@ while True:
 			print('\nLocal Directory')
 			local_dir(path)
 			browse_local(path)
-			print(input('Hit Return'))
+			print(input('\nHit Return'))
 			break
 
 	if selection == '2':
@@ -180,7 +179,7 @@ while True:
 					path = (path+path2+'/')
 
 				browse_local(path)
-				print(input('Hit Return'))
+				print(input('\nHit Return'))
 
 			if selection2 == '2':
 				print('Change remote directory (write up to go one directory up)')
@@ -229,7 +228,7 @@ while True:
 
 				action(mes)
 				sendfile(file)
-				print(input('Hit Return'))
+				print(input('\nHit Return'))
 
 			if selection2 == '2':
 				os.path = path
@@ -253,7 +252,7 @@ while True:
 						break
 
 				sendfile(file)
-				print(input('Hit Return'))
+				print(input('\nHit Return'))
 
 			if selection2 == '3':
 				break
@@ -289,7 +288,7 @@ while True:
 						break
 
 				recievefile(file)
-				print(input('Hit Return'))
+				print(input('\nHit Return'))
 				
 			if selection2 == '2':
 				os.path = path
@@ -313,7 +312,7 @@ while True:
 						break
 
 				recievefile(file)
-				print(input('Hit Return'))
+				print(input('\nHit Return'))
 				
 			if selection2 == '3':
 				break
