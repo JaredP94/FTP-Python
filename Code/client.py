@@ -51,7 +51,7 @@ def sendfile(file=''):
 	p.connect((newip, newport))
 	send('STOR '+file)
 	filepath = path + '/' + file
-	f = open(filepath 'rb')
+	f = open(filepath, 'rb')
 	size = os.stat(filepath)[6]
 	opened = True
 	pos = 0
