@@ -26,6 +26,7 @@ class Example(QtGui.QMainWindow):
         backButtonServer = QtGui.QPushButton("Back")
         download = QtGui.QPushButton("Download")
         upload = QtGui.QPushButton("Upload")
+        upload.clicked.connect(self.sendfile)
         backButtonClient = QtGui.QPushButton("Back")
         connectToServer = QtGui.QPushButton("Connect")
         connectToServer.clicked.connect(self.connect_to_server)
@@ -76,10 +77,11 @@ class Example(QtGui.QMainWindow):
         grid.addWidget(backButtonClient,4, 6,1,1)
 
         ##### View Tree File System #####
-        model = QtGui.QFileSystemModel()
-        model.setRootPath(QDir.homePath())
-        view = QtGui.QTreeView()
-        view.setModel(model)
+        self.model = QtGui.QFileSystemModel()
+        self.model.setRootPath(QDir.homePath())
+        self.view = QtGui.QTreeView()
+        self.view.setModel(self.model)
+ 
 
         # model = QtGui.QFileSystemModel()
         # model.setRootPath(QDir.currentPath())
@@ -88,16 +90,18 @@ class Example(QtGui.QMainWindow):
         # view.setRootIndex(model.index(QDir.currentPath()))
 
         ##### Add file system to grid #####
-        grid.addWidget(view, 6, 0,5,5)
+        grid.addWidget(self.view, 6, 0,5,5)
 
         ##### View Tree File System #####
-        model2 = QtGui.QFileSystemModel()
-        model2.setRootPath(QDir.homePath())
-        view2 = QtGui.QTreeView()
-        view2.setModel(model2)
+        self.model2 = QtGui.QFileSystemModel()
+        self.model2.setRootPath(QDir.homePath())
+        self.indexRoot = self.model2.index(self.model2.rootPath())
+        self.view2 = QtGui.QTreeView()
+        self.view2.setModel(self.model2)
+        self.view2.clicked.connect(self.pickUploadFile)
 
         ##### Add file system to grid #####
-        grid.addWidget(view2, 6, 6,5,5)
+        grid.addWidget(self.view2, 6, 6,5,5)
 
         ####### Create widgets in QMainWindow #######
         widget = QtGui.QWidget()
@@ -112,9 +116,9 @@ class Example(QtGui.QMainWindow):
     def connect_to_server(self):
         self.s = socket.socket()
         ip = self.ipAddress.text()
-        port=int(self.port.text())
-        username=self.name.text()
-        password=self.password.text()
+        port = int( self.port.text() )
+        username = self.name.text()
+        password = self.password.text()
 
         self.s.connect((ip, port))
         self.s.recv(1024)
@@ -129,6 +133,12 @@ class Example(QtGui.QMainWindow):
         self.password.clear()
         self.s.close()
 
+    def pickUploadFile(self,index):
+        indexItem = self.model2.index(index.row(), 0, index.parent())
+
+        self.fileName = self.model2.fileName(indexItem)
+        self.filePath = self.model2.filePath(indexItem)
+
     def recieve(self):
 	    rec = self.s.recv(1024)
 	    return (rec)
@@ -138,7 +148,60 @@ class Example(QtGui.QMainWindow):
 	    return self.recieve()
 
     def send(self,mes=''):
-	    self.s.send(bytes(mes + ("\r\n"), "UTF-8"))       
+	    self.s.send(bytes(mes + ("\r\n"), "UTF-8"))  
+
+    def pasv(self):
+	    while True:
+		    vali = ''
+		    mes = ('PASV')
+		    self.send(mes)
+		    mes = (self.s.recv(1024))
+		    mes = mes.decode()
+		    nmsg = mes.split('(')
+		    nmsg = nmsg[-1].split(')')
+		    p = nmsg[0].split(',')
+		    newip = '.'.join(p[:4])
+		    newport = int(p[4])*256 + int(p[5])
+		    return (newip,newport)
+		    break
+		
+    def sendfile(self):
+        newip, newport = self.pasv()
+        p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        p.connect((newip, newport))
+        self.send('STOR '+self.fileName)
+        f = open(self.filePath, 'rb')
+        size = os.stat(self.filePath)[6]
+        opened = True
+        pos = 0
+        buff = 1048576
+        packs = size/1048576
+        timeb = 100/packs
+        i=0
+
+        while opened:
+            i=i+timeb
+
+            if i>100:
+                i=100
+
+            time.sleep(.05)
+            sys.stdout.write("\r%d%%" %i)
+            sys.stdout.flush()
+            f.seek(pos)
+            pos += buff
+
+            if pos >= size:
+                piece = f.read(-1)
+                opened = False
+            else:
+                piece = f.read(buff) 
+            p.send(piece)
+                
+            f.seek(pos)
+
+        f.close()
+        self.recieve()    
 
 def main():
     app = QtGui.QApplication(sys.argv)
