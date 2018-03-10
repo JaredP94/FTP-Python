@@ -11,7 +11,6 @@ from time import sleep
 from os import walk
  
 
-# view.setRootIndex(model.index("C:\Myfolder")) 
 class Example(QtGui.QMainWindow):
     
     def __init__(self):
@@ -86,17 +85,6 @@ class Example(QtGui.QMainWindow):
         ##### Add file system to grid #####
         grid.addWidget(self.view, 6, 0,5,5)
 
-        # ##### View Tree File System #####
-        # self.model2 = QtGui.QFileSystemModel()
-        # self.model2.setRootPath(QDir.homePath())
-        # self.indexRoot = self.model2.index(self.model2.rootPath())
-        # self.view2 = QtGui.QTreeView()
-        # self.view2.setModel(self.model2)
-        # self.view2.clicked.connect(self.pickUploadFile)
-
-        # ##### Add file system to grid #####
-        # grid.addWidget(self.view2, 6, 6,5,5)
-
         ####### Create manual file system ########
         self.view2 = QtGui.QTreeView()
         self.view2.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -104,39 +92,6 @@ class Example(QtGui.QMainWindow):
         self.model2 = QtGui.QStandardItemModel()
         self.view2.setModel(self.model2)
         self.view2.setUniformRowHeights(True)
-
-        # ####### Get directory structure #######
-        # pathText = self.local_dir(self.path)
-        # if pathText[0]=="/":
-        #     pathText = pathText[1:]
-
-        # newPath = pathText.split('/')
-        # print(newPath)
-        # counter = 0
-        # child=[]
-        # for i in newPath:
-        #     child.append(QtGui.QStandardItem(i)) # item 0 is the parent
-        #     if counter != 0:
-        #         child[counter-1].appendRow([child[counter]])
-        #     counter = counter + 1
-
-        # folders, files = self.browse_local(self.path)
-        # counter2 = 0
-        # ##### Add folders to tree #####
-        # for i in folders:
-        #     child.append(QtGui.QStandardItem(i))
-        #     child[counter - 1].appendRow([child[counter+counter2]])
-        #     counter2 = counter2 + 1
-
-        # counter3 = 0
-        # ##### Add files to tree #####
-        # for i in files:
-        #     child.append(QtGui.QStandardItem(i))
-        #     child[counter - 1].appendRow([child[counter+counter2+counter3]])
-        #     counter3 = counter3 + 1
-
-        # ##### Last step: Add the tree to the model ######
-        # self.model2.appendRow(child[0])
 
         ###### Stop the tree from being editable #######
         self.view2.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
@@ -178,10 +133,8 @@ class Example(QtGui.QMainWindow):
 
     def pickUploadFile(self,index): ## broken
         indexItem = self.model2.index(index.row(), 0, index.parent())
-
         self.fileName = self.model2.fileName(indexItem)
-        # self.filePath = self.local_dir(self.path)
-        self.filePath = self.model2.filePath(indexItem)
+        self.filePath = self.getTreePath(index)
 
     def recieve(self):
 	    rec = self.s.recv(1024)
@@ -296,6 +249,15 @@ class Example(QtGui.QMainWindow):
 
         ##### Last step: Add the tree to the model ######
         self.model2.appendRow(child[0])
+
+    def getTreePath(self, index):
+    path = []
+    while item.isValid():
+        indexItem = self.model2.index(index.row(), 0, index.parent())
+        self.fileName = self.model2.fileName(indexItem)
+        path.append(indexItem)
+        index = index.parent()
+    return '/'.join(reversed(path))
 
 def main():
     app = QtGui.QApplication(sys.argv)
