@@ -9,7 +9,8 @@ import os
 import time
 from time import sleep
 from os import walk
- 
+
+from pathlib import Path
 
 class Example(QtGui.QMainWindow):
     
@@ -20,7 +21,9 @@ class Example(QtGui.QMainWindow):
 
     def initUI(self):      
 
-        self.path = os.getcwd()
+        # self.path = os.getcwd()
+        self.path = str(Path.home())
+        print(self.path)
         ############# Create grid ####################
 
         backButtonServer = QtGui.QPushButton("Back")
@@ -78,7 +81,6 @@ class Example(QtGui.QMainWindow):
 
         ##### View Tree File System #####
         self.model = QtGui.QFileSystemModel()
-        # self.model.setRootPath(QDir.homePath())
         self.view = QtGui.QTreeView()
         self.view.setModel(self.model)
 
@@ -119,7 +121,6 @@ class Example(QtGui.QMainWindow):
 
         self.action('USER '+'my_name_is_jeff')
         self.action('PASS '+'strongpassword')
-        self.path = self.local_dir()
         self.model.setRootPath(QDir.homePath())
 
         self.updateTree()
@@ -131,7 +132,10 @@ class Example(QtGui.QMainWindow):
         self.password.clear()
         self.s.close()
 
-    def pickUploadFile(self,index): ## broken
+    def pickUploadFile(self,index):
+        self.path = self.getTreePath(index)
+        self.path = "/" + self.path
+        self.updateTree()
         indexItem = self.model2.index(index.row(), 0, index.parent())
         self.fileName = self.model2.itemFromIndex(indexItem).text()
         self.filePath = self.getTreePath(index)
@@ -181,9 +185,8 @@ class Example(QtGui.QMainWindow):
         newip, newport = self.pasv()
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
-        # self.filePath=self.filePath.replace(' ', '\ ')
-        self.filePath="/"+self.filePath
-        self.send('STOR '+self.fileName)
+        self.filePath="/" + self.filePath
+        self.send('STOR ' + self.fileName)
         f = open(self.filePath, 'rb')
         size = os.stat(self.filePath)[6]
         opened = True
@@ -218,9 +221,11 @@ class Example(QtGui.QMainWindow):
         self.recieve()    
 
     def updateTree(self):
-        self.path = os.getcwd()
         ####### Get directory structure #######
         pathText = self.local_dir(self.path)
+
+        print("Path in update " + pathText)
+
         if pathText[0]=="/":
             pathText = pathText[1:]
 
@@ -251,6 +256,9 @@ class Example(QtGui.QMainWindow):
 
         ##### Last step: Add the tree to the model ######
         self.model2.appendRow(child[0])
+
+        # if self.model2.rowCount()==2:
+        #     self.model2.removeRow(0)
 
     def getTreePath(self, index):
         path = []
