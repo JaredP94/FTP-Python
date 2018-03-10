@@ -26,11 +26,9 @@ class Example(QtGui.QMainWindow):
         print(self.path)
         ############# Create grid ####################
 
-        backButtonServer = QtGui.QPushButton("Back")
         download = QtGui.QPushButton("Download")
         upload = QtGui.QPushButton("Upload")
         upload.clicked.connect(self.sendfile)
-        backButtonClient = QtGui.QPushButton("Back")
         connectToServer = QtGui.QPushButton("Connect")
         connectToServer.clicked.connect(self.connect_to_server)
         disconnectFromServer = QtGui.QPushButton("Disconnect")
@@ -74,10 +72,8 @@ class Example(QtGui.QMainWindow):
         grid.addWidget(local, 4, 8,1,1)
 
         ##### Buttons #####
-        grid.addWidget(backButtonServer, 4, 0,1,1)
         grid.addWidget(download, 4, 4,1,1)
         grid.addWidget(upload, 4, 10,1,1)
-        grid.addWidget(backButtonClient,4, 6,1,1)
 
         ##### View Tree File System #####
         self.model = QtGui.QFileSystemModel()
@@ -139,6 +135,7 @@ class Example(QtGui.QMainWindow):
         indexItem = self.model2.index(index.row(), 0, index.parent())
         self.fileName = self.model2.itemFromIndex(indexItem).text()
         self.filePath = self.getTreePath(index)
+        self.model2.removeRow(0)
 
     def recieve(self):
 	    rec = self.s.recv(1024)
@@ -168,16 +165,16 @@ class Example(QtGui.QMainWindow):
 
     def local_dir(self,path=''):
         for (dirpath, dirnames, filenames) in walk(path):
-            print ('"'+dirpath+'"')
+            # print ('"'+dirpath+'"')
             path = dirpath
             break   
         return path
 
     def browse_local(self,path=''):
         for (dirpath, dirnames, filenames) in walk(path):
-            print (dirnames)
-            print (filenames)
-            print ('\n')
+            # print (dirnames)
+            # print (filenames)
+            # print ('\n')
             break
         return (dirnames, filenames)
 		
@@ -231,8 +228,10 @@ class Example(QtGui.QMainWindow):
 
         newPath = pathText.split('/')
         print(newPath)
+
         counter = 0
         child=[]
+
         for i in newPath:
             child.append(QtGui.QStandardItem(i)) # item 0 is the parent
             if counter != 0:
@@ -254,11 +253,10 @@ class Example(QtGui.QMainWindow):
             child[counter - 1].appendRow([child[counter+counter2+counter3]])
             counter3 = counter3 + 1
 
+
         ##### Last step: Add the tree to the model ######
         self.model2.appendRow(child[0])
-
-        # if self.model2.rowCount()==2:
-        #     self.model2.removeRow(0)
+        self.view2.expandAll()
 
     def getTreePath(self, index):
         path = []
