@@ -95,6 +95,7 @@ class Example(QtGui.QMainWindow):
 
         ###### Stop the tree from being editable #######
         self.view2.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.view2.setHeaderHidden(True)
         grid.addWidget(self.view2, 6, 6,5,5)
         ####### Create widgets in QMainWindow #######
         widget = QtGui.QWidget()
@@ -128,12 +129,11 @@ class Example(QtGui.QMainWindow):
         self.port.clear()
         self.name.clear()
         self.password.clear()
-        # self.model.setRootPath(" ")
         self.s.close()
 
     def pickUploadFile(self,index): ## broken
         indexItem = self.model2.index(index.row(), 0, index.parent())
-        self.fileName = self.model2.fileName(indexItem)
+        self.fileName = self.model2.itemFromIndex(indexItem).text()
         self.filePath = self.getTreePath(index)
 
     def recieve(self):
@@ -181,6 +181,8 @@ class Example(QtGui.QMainWindow):
         newip, newport = self.pasv()
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
+        # self.filePath=self.filePath.replace(' ', '\ ')
+        self.filePath="/"+self.filePath
         self.send('STOR '+self.fileName)
         f = open(self.filePath, 'rb')
         size = os.stat(self.filePath)[6]
@@ -251,13 +253,13 @@ class Example(QtGui.QMainWindow):
         self.model2.appendRow(child[0])
 
     def getTreePath(self, index):
-    path = []
-    while item.isValid():
-        indexItem = self.model2.index(index.row(), 0, index.parent())
-        self.fileName = self.model2.fileName(indexItem)
-        path.append(indexItem)
-        index = index.parent()
-    return '/'.join(reversed(path))
+        path = []
+        while index.isValid():
+            indexItem = self.model2.index(index.row(), 0, index.parent())
+            name = self.model2.itemFromIndex(indexItem).text()
+            path.append(name)
+            index = index.parent()
+        return '/'.join(reversed(path))
 
 def main():
     app = QtGui.QApplication(sys.argv)
