@@ -122,7 +122,7 @@ def listar():
 			folders.append(item)
 		else:
 			files.append(item)
-
+			
 	for index, folder in enumerate(folders):
 		contents = folder.split(' ')
 		folder = contents[-1]
@@ -166,6 +166,21 @@ while True:
 			directory = ''
 			os.system('cls' if os.name == 'nt' else 'clear')
 			print('Remote Directory')
+			mes = ('PWD')
+			send(mes)
+			directory = s.recv(1024)
+			directory = directory.decode()
+			vali = directory.split('i')
+			vali = vali[0].split(' ')
+			vali = vali[0]
+
+			if vali == '257':
+				directory = directory.split('"')
+				directory = directory[1]
+				print('"'+directory+'"')
+			else:
+				print('"'+directory+'"')
+
 			listar()
 			print('\nLocal Directory')
 			local_dir(path)
