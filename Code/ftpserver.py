@@ -1,9 +1,11 @@
-import socket
-import threading
 import os
+import socket
 import stat
 import sys
+import threading
 import time
+import magic
+from pathlib import Path
 from utils import fileProperty
 
 try:
@@ -452,6 +454,15 @@ class FTPServerProtocol(threading.Thread):
     def IDIR(self, pathServer):
         # Determines whether path exists on server site
         if os.path.isdir(pathServer):
+            self.sendResponse('True')
+            log("IDIR", 'True')
+        else:
+            self.sendResponse('False')
+            log("IDIR", 'False')
+
+    def FTYP(self, pathServer): # file type
+        file = magic.Magic(mime=True)
+        if (file.from_file(pathServer)=='text/plain'):
             self.sendResponse('True')
         else:
             self.sendResponse('False')

@@ -180,9 +180,11 @@ class Example(QtGui.QMainWindow):
     def traverseTreeServer(self,index):
         self.pathServer = self.getTreePathServer(index)
         self.pathServer = "/" + self.pathServer
-        self.action('CWD '+self.pathServer)
-        mes = ('IDIR'+self.pathServer)
+        reply1 = self.action('CWD '+ self.pathServer)
+        mes = ('IDIR'+ self.pathServer)
         reply= self.action(mes)
+        print(reply1)
+        print(reply)
         if b'True' in reply:
             self.updateTreeServer()
             indexItem = self.model.index(index.row(), 0, index.parent())
@@ -336,7 +338,7 @@ class Example(QtGui.QMainWindow):
             f.seek(pos)
 
         f.close()
-        self.recieve()    
+        self.recieve() 
 
     def recievefile(self,file=''):
         newip, newport = self.pasv()
@@ -354,6 +356,8 @@ class Example(QtGui.QMainWindow):
             aux = p.recv(1048576)
             newfile.write(aux)
         newfile.close()
+        test= self.recieve()
+        print(test)
 
     def listar(self):
         newip, newport = self.pasv()
@@ -393,8 +397,11 @@ class Example(QtGui.QMainWindow):
         mes = ('ABOR')
         p.send(bytes(mes + ("\r\n"), "UTF-8"))
         self.recieve()
+        print("folders are: " )
         print (folders)
+        print ("files are:")
         print(files)
+        p.close()
         return (folders,files)
 
     def updateTreeClient(self):
