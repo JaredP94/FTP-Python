@@ -131,11 +131,16 @@ class Example(QtGui.QMainWindow):
     def pickUploadFile(self,index):
         self.path = self.getTreePath(index)
         self.path = "/" + self.path
-        self.updateTree()
-        indexItem = self.model2.index(index.row(), 0, index.parent())
-        self.fileName = self.model2.itemFromIndex(indexItem).text()
-        self.filePath = self.getTreePath(index)
-        self.model2.removeRow(0)
+        if os.path.isdir(self.path):
+            self.updateTree()
+            indexItem = self.model2.index(index.row(), 0, index.parent())
+            self.fileName = self.model2.itemFromIndex(indexItem).text()
+            self.filePath = self.getTreePath(index)
+            self.model2.removeRow(0)
+        else:
+            indexItem = self.model2.index(index.row(), 0, index.parent())
+            self.fileName = self.model2.itemFromIndex(indexItem).text()
+            self.filePath = self.getTreePath(index)
 
     def recieve(self):
 	    rec = self.s.recv(1024)
@@ -172,9 +177,6 @@ class Example(QtGui.QMainWindow):
 
     def browse_local(self,path=''):
         for (dirpath, dirnames, filenames) in walk(path):
-            # print (dirnames)
-            # print (filenames)
-            # print ('\n')
             break
         return (dirnames, filenames)
 		
