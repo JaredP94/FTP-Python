@@ -9,8 +9,8 @@ import os
 import time
 from time import sleep
 from os import walk
-
 from pathlib import Path
+import magic
 
 class Example(QtGui.QMainWindow):
     
@@ -31,7 +31,7 @@ class Example(QtGui.QMainWindow):
 
         download = QtGui.QPushButton("Download")
         upload = QtGui.QPushButton("Upload")
-        upload.clicked.connect(self.sendfile)
+        upload.clicked.connect(self.defineFileType)
         connectToServer = QtGui.QPushButton("Connect")
         connectToServer.clicked.connect(self.connect_to_server)
         disconnectFromServer = QtGui.QPushButton("Disconnect")
@@ -97,6 +97,7 @@ class Example(QtGui.QMainWindow):
         ###### Stop the tree from being editable #######
         self.view2.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.view2.setHeaderHidden(True)
+        self.view2.setAlternatingRowColors(True)
         grid.addWidget(self.view2, 6, 6,5,5)
         ####### Create widgets in QMainWindow #######
         widget = QtGui.QWidget()
@@ -173,7 +174,6 @@ class Example(QtGui.QMainWindow):
 
     def local_dir(self,path=''):
         for (dirpath, dirnames, filenames) in walk(path):
-            # print ('"'+dirpath+'"')
             path = dirpath
             break   
         return path
@@ -182,12 +182,40 @@ class Example(QtGui.QMainWindow):
         for (dirpath, dirnames, filenames) in walk(path):
             break
         return (dirnames, filenames)
-		
+
+    def defineFileType(self):
+        self.filePath="/" + self.filePath
+        file = magic.Magic(mime=True)
+        if (file.from_file(self.filePath)=='text/plain'):
+            mes = ('TYPE A')
+            self.send(mes)
+        else:
+            mes = ('TYPE I')
+            self.send(mes)
+
+        while True:
+            vali = self.recieve()
+            vali = vali.decode()
+            vali = vali.split("'")
+            vali = vali[0].split(' ')
+            vali = vali[0]
+            
+            if vali == '226':
+                mes = ('ABOR')
+                self.action(mes)
+                self.recieve()
+                break
+            else:
+                break
+
+        self.action(mes)
+        self.sendfile()
+
     def sendfile(self):
         newip, newport = self.pasv()
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
-        self.filePath="/" + self.filePath
+        print (self.filePath)
         self.send('STOR ' + self.fileName)
         f = open(self.filePath, 'rb')
         size = os.stat(self.filePath)[6]
@@ -274,7 +302,7 @@ class Example(QtGui.QMainWindow):
             path.append(name)
             index = index.parent()
         return '/'.join(reversed(path))
-
+    
 def main():
     app = QtGui.QApplication(sys.argv)
     ex = Example()
