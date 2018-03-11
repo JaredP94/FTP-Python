@@ -17,7 +17,7 @@ port = 8000
 working_directory  = os.getcwd()
 allow_delete = False
 ascii_buffer = 1024
-binary_buffer = 1048576
+binary_buffer = 4194304
 
 class FTPServerProtocol(threading.Thread):
     def __init__(self, command_socket, address):
