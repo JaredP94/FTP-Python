@@ -434,8 +434,10 @@ class FtpServerProtocol(threading.Thread):
     def IDIR(self, pathServer):
         if os.path.isdir(pathServer):
             self.sendCommand('True')
+            log("IDIR", 'True')
         else:
             self.sendCommand('False')
+            log("IDIR", 'False')
 
     def FTYP(self, pathServer): # file type
         file = magic.Magic(mime=True)
