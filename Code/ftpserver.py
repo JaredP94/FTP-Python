@@ -28,7 +28,8 @@ class FTPServerProtocol(threading.Thread):
         self.working_directory  = working_directory
         self.command_socket     = command_socket
         self.address            = address
-        self.mode               = 'A'
+        self.type               = 'A'
+        self.mode               = 'S'
 
     def run(self):
         # Handles and executes received user commands
@@ -91,7 +92,7 @@ class FTPServerProtocol(threading.Thread):
 
     def sendData(self, data):
         # Transmit file data to client
-        if self.mode == 'I':
+        if self.type == 'I':
             self.data_socket.send(data)
         else:
             self.data_socket.send(data.encode('utf-8'))
@@ -125,12 +126,12 @@ class FTPServerProtocol(threading.Thread):
     def TYPE(self, type):
         # Specify file mode to be handled
         log('TYPE', type)
-        self.mode = type
+        self.type = type
 
-        if self.mode == 'I':
-            self.sendResponse('200 Binary mode.\r\n')
-        elif self.mode == 'A':
-            self.sendResponse('200 Ascii mode.\r\n')
+        if self.type == 'I':
+            self.sendResponse('200 Binary file mode.\r\n')
+        elif self.type == 'A':
+            self.sendResponse('200 Ascii file mode.\r\n')
 
     def PASV(self, client_command):
         # Makes server-DTP "listen" on a non-default data port to wait for a connection rather than initiate one upon receipt of a transfer command
@@ -143,6 +144,19 @@ class FTPServerProtocol(threading.Thread):
         address, port = self.server_socket.getsockname()
         self.sendResponse('227 Entering Passive Mode (%s,%u,%u).\r\n' %
                 (','.join(address.split('.')), port>>8&0xFF, port&0xFF))
+
+    def MODE(self, mode):
+        # Specifies data transfer mode for server
+        log('MODE', mode)
+        self.mode = mode
+
+        if self.type == 'S':
+            self.sendResponse('200 Stream transfer mode.\r\n')
+        elif self.type == 'B':
+            self.sendResponse('200 Block transfer mode.\r\n')
+        elif self.type == 'C':
+            self.sendResponse('200 Compressed transfer mode.\r\n')
+
 
     def PORT(self,client_command):
         # Specify the port to be used for data transmission
@@ -300,7 +314,7 @@ class FTPServerProtocol(threading.Thread):
         if not os.path.exists(server_path):
             return
         try:
-            if self.mode=='I':
+            if self.type=='I':
                 file = open(server_path, 'rb')
             else:
                 file = open(server_path, 'r')
@@ -318,7 +332,8 @@ class FTPServerProtocol(threading.Thread):
         while True:
             data = file.read(binary_buffer)
             if not data: break
-            self.sendData(data)
+            if self.mode == 'S':
+                self.sendData(data)
 
         file.close()
         self.terminateDataSocket()
@@ -334,7 +349,7 @@ class FTPServerProtocol(threading.Thread):
         log('STOR', server_path)
 
         try:
-            if self.mode == 'I':
+            if self.type == 'I':
                 file = open(server_path, 'wb')
             else:
                 file = open(server_path, 'w')
@@ -345,7 +360,7 @@ class FTPServerProtocol(threading.Thread):
         self.createDataSocket()
 
         while True:
-            if self.mode == 'I':
+            if self.type == 'I':
                 data = self.data_socket.recv(binary_buffer)
             else:
                 data = self.data_socket.recv(binary_buffer).decode('utf-8')
@@ -372,7 +387,7 @@ class FTPServerProtocol(threading.Thread):
         self.createDataSocket()
 
         if not os.path.exists(server_path):
-            if self.mode == 'I':
+            if self.type == 'I':
                 file = open(server_path, 'wb')
             else:
                 file = open(server_path, 'w')
@@ -390,7 +405,7 @@ class FTPServerProtocol(threading.Thread):
                 server_path = filename + '(%s)' %n + extname
                 n += 1
 
-            if self.mode == 'I':
+            if self.type == 'I':
                 file = open(server_path, 'wb')
             else:
                 file = open(server_path, 'w')
