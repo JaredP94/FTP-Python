@@ -44,6 +44,7 @@ class Example(QtGui.QMainWindow):
         download = QtGui.QPushButton("Download")
         upload = QtGui.QPushButton("Upload")
         upload.clicked.connect(self.defineFileType)
+        download.clicked.connect(self.defineDownloadType)
         connectToServer = QtGui.QPushButton("Connect")
         connectToServer.clicked.connect(self.connect_to_server)
         disconnectFromServer = QtGui.QPushButton("Disconnect")
@@ -176,25 +177,22 @@ class Example(QtGui.QMainWindow):
 
         return directory
 
-			# listar()
-
     def traverseTreeServer(self,index):
         self.pathServer = self.getTreePathServer(index)
         self.pathServer = "/" + self.pathServer
         self.action('CWD '+self.pathServer)
         mes = ('IDIR'+self.pathServer)
         reply= self.action(mes)
-        print (reply)
         if b'True' in reply:
             self.updateTreeServer()
             indexItem = self.model.index(index.row(), 0, index.parent())
-            self.fileName = self.model.itemFromIndex(indexItem).text()
-            self.filePath = self.getTreePathServer(index)
+            self.fileNameServer = self.model.itemFromIndex(indexItem).text()
+            self.filePathServer = self.getTreePathServer(index)
             self.model.removeRow(0)
         else:
             indexItem = self.model.index(index.row(), 0, index.parent())
-            self.fileName = self.model.itemFromIndex(indexItem).text()
-            self.filePath = self.getTreePathServer(index)
+            self.fileNameServer = self.model.itemFromIndex(indexItem).text()
+            self.filePathServer = self.getTreePathServer(index)
 
     def traverseTreeClient(self,index):
         self.path = self.getTreePath(index)
@@ -246,6 +244,32 @@ class Example(QtGui.QMainWindow):
         for (dirpath, dirnames, filenames) in walk(path):
             break
         return (dirnames, filenames)
+
+    def defineDownloadType(self):
+        self.filePathServer="/" + self.filePathServer
+        mes = ('FTYP'+self.filePathServer)
+        reply= self.action(mes)
+        if b'True' in reply:
+            mes = ('TYPE A')
+        else:
+            mes = ('TYPE I')
+        self.send(mes)
+        while True:
+            vali = self.recieve()
+            vali = vali.decode()
+            vali = vali.split("'")
+            vali = vali[0].split(' ')
+            vali = vali[0]
+            
+            if vali == '226':
+                mes = ('ABOR')
+                self.action(mes)
+                self.recieve()
+                break
+            else:
+                break
+
+        self.recievefile(self.fileNameServer)
 
     def defineFileType(self):
         self.filePath="/" + self.filePath
@@ -364,13 +388,11 @@ class Example(QtGui.QMainWindow):
             file = contents[-1]
             files[index] = file
 
-        # print(folders)
-        # print(files)
-
         mes = ('ABOR')
         p.send(bytes(mes + ("\r\n"), "UTF-8"))
         self.recieve()
-
+        print (folders)
+        print(files)
         return (folders,files)
 
     def updateTreeClient(self):
