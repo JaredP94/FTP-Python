@@ -357,6 +357,7 @@ while True:
 		os.system('cls' if os.name == 'nt' else 'clear')
 		print('FTP client now exiting')
 		print(input('\nHit return to exit'))
+		send('QUIT')
 		break
 
 s.close()                  

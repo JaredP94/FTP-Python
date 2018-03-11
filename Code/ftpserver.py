@@ -6,400 +6,425 @@ import sys
 import time
 from utils import fileProperty
 
-allow_delete = False
-
 try:
-    HOST = socket.gethostbyname(socket.gethostname())
+    host = socket.gethostbyname(socket.gethostname())
 except socket.gaierror:
-    HOST = socket.gethostname()
-PORT = 8000
-CWD  = os.getcwd()
+    host = socket.gethostname()
 
-def log(func, cmd):
-        logmsg = time.strftime("%Y-%m-%d %H-%M-%S [-] " + func)
-        print("\033[31m%s\033[0m: \033[32m%s\033[0m" % (logmsg, cmd))
+port = 8000
+working_directory  = os.getcwd()
+allow_delete = False
+ascii_buffer = 1024
+binary_buffer = 1048576
 
-class FtpServerProtocol(threading.Thread):
-    def __init__(self, commSock, address):
+class FTPServerProtocol(threading.Thread):
+    def __init__(self, command_socket, address):
         threading.Thread.__init__(self)
-        self.authenticated = False
-        self.pasv_mode     = False
-        self.rest          = False
-        self.cwd           = CWD
-        self.commSock      = commSock   # communication socket as command channel
-        self.address       = address
-        self.mode          = 'A'
+        self.authenticated      = False
+        self.pasv_mode          = False
+        self.rest               = False
+        self.working_directory  = working_directory
+        self.command_socket     = command_socket
+        self.address            = address
+        self.mode               = 'A'
 
     def run(self):
-        """
-        receive commands from client and execute commands
-        """
-        self.sendWelcome()
+        # Handles and executes received user commands
+        self.connectionSuccess()
         while True:
             try:
-                data = self.commSock.recv(1024).rstrip()
+                data = self.command_socket.recv(ascii_buffer).rstrip()
                 try:
-                    cmd = data.decode('utf-8')
+                    client_command = data.decode('utf-8')
                 except AttributeError:
-                    cmd = data
-                log('Received data', cmd)
-                if not cmd:
+                    client_command = data
+                log('Received data', client_command)
+                if not client_command:
                     break
-            except socket.error as err:
-                log('Receive', err)
+            except socket.error as error:
+                log('Receive', error)
 
             try:
-                cmd, arg = cmd[:4].strip().upper(), cmd[4:].strip( ) or None
-                func = getattr(self, cmd)
-                func(arg)
-            except AttributeError as err:
-                self.sendCommand('500 Syntax error, command unrecognized. '
-                    'This may include errors such as command line too long.\r\n')
-                log('Receive', err)
+                client_command, param = client_command[:4].strip().upper(), client_command[4:].strip() or None
+                func = getattr(self, client_command)
+                func(param)
+            except AttributeError as error:
+                self.sendResponse('500 Syntax error, command unrecognized.\r\n')
+                log('Receive', error)
 
-    #-------------------------------------#
-    ## Create Ftp data transport channel ##
-    #-------------------------------------#
-    def startDataSock(self):
-        log('startDataSock', 'Opening a data channel')
+    def connectionSuccess(self):
+        # Provide greeting for accepted user connection
+        self.sendResponse('220 Welcome.\r\n')
+
+    #=======================================#
+    ## FTP transmission control procedures ##
+    #=======================================#
+    def createDataSocket(self):
+        # Open socket with client for data transmission
+        log('createDataSocket', 'Opening a data channel')
         try:
-            self.dataSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if self.pasv_mode:
-                self.dataSock, self.address = self.serverSock.accept( )
+                self.data_socket, self.address = self.server_socket.accept()
 
             else:
-                self.dataSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.dataSock.connect((self.dataSockAddr, self.dataSockPort))
-        except socket.error as err:
-            log('startDataSock', err)
+                self.data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.data_socket.connect((self.data_socket_address, self.data_socket_port))
+        except socket.error as error:
+            log('createDataSocket', error)
 
-    def stopDataSock(self):
-        log('stopDataSock', 'Closing a data channel')
+    def terminateDataSocket(self):
+        # Close data tranmission socket with client
+        log('terminateDataSocket', 'Closing a data channel')
         try:
-            self.dataSock.close( )
+            self.data_socket.close()
             if self.pasv_mode:
-                self.serverSock.close( )
-        except socket.error as err:
-            log('stopDataSock', err)
+                self.server_socket.close()
+        except socket.error as error:
+            log('terminateDataSocket', error)
 
-    def sendCommand(self, cmd):
-        self.commSock.send(cmd.encode('utf-8'))
+    def sendResponse(self, client_command):
+        # Transmit request codes and relevant message to client
+        self.command_socket.send(client_command.encode('utf-8'))
 
     def sendData(self, data):
+        # Transmit file data to client
         if self.mode == 'I':
-            self.dataSock.send(data)
+            self.data_socket.send(data)
         else:
-            self.dataSock.send(data.encode('utf-8'))
+            self.data_socket.send(data.encode('utf-8'))
 
-    #------------------------------#
-    ## Ftp services and functions ##
-    #------------------------------#
-    def USER(self, user):
-        log("USER", user)
-        if not user:
-            self.sendCommand('501 Syntax error in parameters or arguments.\r\n')
-
+    #===============================================#
+    ## FTP commands and additional functionalities ##
+    #===============================================#
+    def USER(self, username):
+        # Lets user to set their username
+        log("USER", username)
+        if not username:
+            self.sendResponse('501 Syntax error in parameters or arguments.\r\n')
         else:
-            self.sendCommand('331 User name okay, need password.\r\n')
-            self.username = user
+            self.sendResponse('331 User name okay, need password.\r\n')
+            self.username = username
 
-    def PASS(self, passwd):
-        log("PASS", passwd)
-        if not passwd:
-            self.sendCommand('501 Syntax error in parameters or arguments.\r\n')
+    def PASS(self, password):
+        # Lets user to set their password
+        log("PASS", password)
+        if not password:
+            self.sendResponse('501 Syntax error in parameters or arguments.\r\n')
 
         elif not self.username:
-            self.sendCommand('503 Bad sequence of commands.\r\n')
+            self.sendResponse('503 Bad sequence of commands.\r\n')
 
         else:
-            self.sendCommand('230 User logged in, proceed.\r\n')
-            self.passwd = passwd
+            self.sendResponse('230 User logged in, proceed.\r\n')
+            self.password = password
             self.authenticated = True
 
     def TYPE(self, type):
+        # Specify file mode to be handled
         log('TYPE', type)
         self.mode = type
+
         if self.mode == 'I':
-            self.sendCommand('200 Binary mode.\r\n')
+            self.sendResponse('200 Binary mode.\r\n')
         elif self.mode == 'A':
-            self.sendCommand('200 Ascii mode.\r\n')
+            self.sendResponse('200 Ascii mode.\r\n')
 
-    def PASV(self, cmd):
-        log("PASV", cmd)
+    def PASV(self, client_command):
+        # Makes server-DTP "listen" on a non-default data port to wait for a connection rather than initiate one upon receipt of a transfer command
+        log("PASV", client_command)
         self.pasv_mode  = True
-        self.serverSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.serverSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.serverSock.bind((HOST, 0))
-        self.serverSock.listen(5)
-        addr, port = self.serverSock.getsockname( )
-        #self.sendCommand('277 Entering Passve mode (%s,%d,%d).\r\n' %
-          #  (addr.replace('.', ','), (port / 256), (port % 256)))
-        #self.sendCommand('227 Entering Passive Mode (%s,%u,%u).\r\n' % (','.join(addr.split('.')), port>>8&0xFF, port&0xFF))
-        #self.sendCommand('227 Entering Passive Mode (%s,%u,%u).\r\n' % (','.join(addr.split('.')), port>>8&0xFF, port&0xFF))
-        self.sendCommand('227 Entering Passive Mode (%s,%u,%u).\r\n' %
-                (','.join(addr.split('.')), port>>8&0xFF, port&0xFF))
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server_socket.bind((host, 0))
+        self.server_socket.listen(5)
+        address, port = self.server_socket.getsockname()
+        self.sendResponse('227 Entering Passive Mode (%s,%u,%u).\r\n' %
+                (','.join(address.split('.')), port>>8&0xFF, port&0xFF))
 
-    '''
-    def PORT(self, pair):
-        log('PORT', pair)
-        pair = pair.split(',')
-        ip, p1, p2 = ('.'.join(pair[:4]), pair[5], pair[6])
-        self.dataSockAddr = ip
-        self.dataSockPort = (256 * p1) + p2
-        self.sendCommand('200 Ok.\r\n')
-    '''
-    def PORT(self,cmd):
-        log("PORT: ", cmd)
+    def PORT(self,client_command):
+        # Specify the port to be used for data transmission
+        log("PORT: ", client_command)
         if self.pasv_mode:
-            self.servsock.close()
+            self.server_socket.close()
             self.pasv_mode = False
-        l=cmd[5:].split(',')
-        self.dataSockAddr='.'.join(l[:4])
-        self.dataSockPort=(int(l[4])<<8)+int(l[5])
-        self.sendCommand('200 Get port.\r\n')
 
-    def LIST(self, dirpath):
+        connection_info = client_command[5:].split(',')
+        self.data_socket_address = '.'.join(connection_info[:4])
+        self.data_socket_address = (int(connection_info[4])<<8) + int(connection_info[5])
+        self.sendResponse('200 Get port.\r\n')
+
+    def LIST(self, directory_path):
+        # Sends list of content in specified server path
         if not self.authenticated:
-            self.sendCommand('530 User not logged in.\r\n')
+            self.sendResponse('530 User not logged in.\r\n')
             return
 
-        if not dirpath:
-            pathname = os.path.abspath(os.path.join(self.cwd, '.'))
-        elif dirpath.startswith(os.path.sep):
-            pathname = os.path.abspath(dirpath)
+        if not directory_path:
+            server_path = os.path.abspath(os.path.join(self.working_directory, '.'))
+        elif directory_path.startswith(os.path.sep):
+            server_path = os.path.abspath(directory_path)
         else:
-            pathname = os.path.abspath(os.path.join(self.cwd, dirpath))
+            server_path = os.path.abspath(os.path.join(self.working_directory, directory_path))
 
-        log('LIST', pathname)
+        log('LIST', server_path)
+
         if not self.authenticated:
-            self.sendCommand('530 User not logged in.\r\n')
-
-        elif not os.path.exists(pathname):
-            self.sendCommand('550 LIST failed Path name not exists.\r\n')
-
+            self.sendResponse('530 User not logged in.\r\n')
+        elif not os.path.exists(server_path):
+            self.sendResponse('550 LIST failed Path name not exists.\r\n')
         else:
-            self.sendCommand('150 Here is listing.\r\n')
-            self.startDataSock( )
-            if not os.path.isdir(pathname):
-                fileMessage = fileProperty(pathname)
-                self.dataSock.sock(fileMessage+'\r\n')
+            self.sendResponse('150 Here is listing.\r\n')
+            self.createDataSocket()
 
+            if not os.path.isdir(server_path):
+                fileMessage = fileProperty(server_path)
+                self.data_socket.sock(fileMessage+'\r\n')
             else:
-                for file in os.listdir(pathname):
-                    fileMessage = fileProperty(os.path.join(pathname, file))
+                for file in os.listdir(server_path):
+                    fileMessage = fileProperty(os.path.join(server_path, file))
                     self.sendData(fileMessage+'\r\n')
-            self.stopDataSock( )
-            self.sendCommand('226 List done.\r\n')
 
-    def NLST(self, dirpath):
-        self.LIST(dirpath)
+            self.terminateDataSocket()
+            self.sendResponse('226 List done.\r\n')
 
-    def CWD(self, dirpath):
-        pathname = dirpath.endswith(os.path.sep) and dirpath or os.path.join(self.cwd, dirpath)
-        log('CWD', pathname)
-        if not os.path.exists(pathname) or not os.path.isdir(pathname):
-            self.sendCommand('550 CWD failed Directory not exists.\r\n')
+    def NLST(self, directory_path):
+        # Sends a directory listing from server to user site
+        self.LIST(directory_path)
+
+    def CWD(self, directory_path):
+        # Allows user to change current directory to a new directory on the server
+        server_path = directory_path.endswith(os.path.sep) and directory_path or os.path.join(self.working_directory, directory_path)
+        log('CWD', server_path)
+
+        if not os.path.exists(server_path) or not os.path.isdir(server_path):
+            self.sendResponse('550 CWD failed Directory not exists.\r\n')
             return
-        self.cwd = pathname
-        self.sendCommand('250 CWD Command successful.\r\n')
 
-    def PWD(self, cmd):
-        log('PWD', cmd)
-        self.sendCommand('257 "%s".\r\n' % self.cwd)
+        self.working_directory = server_path
+        self.sendResponse('250 CWD Command successful.\r\n')
 
-    def CDUP(self, cmd):
-        self.cwd = os.path.abspath(os.path.join(self.cwd, '..'))
-        log('CDUP', self.cwd)
-        self.sendCommand('200 Ok.\r\n')
+    def PWD(self, client_command):
+        # Returns the current server directory path
+        log('PWD', client_command)
+        self.sendResponse('257 "%s".\r\n' % self.working_directory)
+
+    def CDUP(self, client_command):
+        # Changes current working directory to parent directory
+        self.working_directory = os.path.abspath(os.path.join(self.working_directory, '..'))
+        log('CDUP', self.working_directory)
+        self.sendResponse('200 Ok.\r\n')
 
     def DELE(self, filename):
-        pathname = filename.endswith(os.path.sep) and filename or os.path.join(self.cwd, filename)
-        log('DELE', pathname)
+        # Deletes file specified in the pathname to be deleted at the server site
+        server_path = filename.endswith(os.path.sep) and filename or os.path.join(self.working_directory, filename)
+        log('DELE', server_path)
+
         if not self.authenticated:
-            self.sendCommand('530 User not logged in.\r\n')
-
-        elif not os.path.exists(pathname):
-            self.send('550 DELE failed File %s not exists.\r\n' % pathname)
-
+            self.sendResponse('530 User not logged in.\r\n')
+        elif not os.path.exists(server_path):
+            self.send('550 DELE failed File %s not exists.\r\n' % server_path)
         elif not allow_delete:
             self.send('450 DELE failed delete not allow.\r\n')
-
         else:
-            os.remove(pathname)
-            self.sendCommand('250 File deleted.\r\n')
+            os.remove(server_path)
+            self.sendResponse('250 File deleted.\r\n')
 
     def MKD(self, dirname):
-        pathname = dirname.endswith(os.path.sep) and dirname or os.path.join(self.cwd, dirname)
-        log('MKD', pathname)
-        if not self.authenticated:
-            self.sendCommand('530 User not logged in.\r\n')
+        # Creates specified directory at current path directory
+        server_path = dirname.endswith(os.path.sep) and dirname or os.path.join(self.working_directory, dirname)
+        log('MKD', server_path)
 
+        if not self.authenticated:
+            self.sendResponse('530 User not logged in.\r\n')
         else:
             try:
-                os.mkdir(pathname)
-                self.sendCommand('257 Directory created.\r\n')
+                os.mkdir(server_path)
+                self.sendResponse('257 Directory created.\r\n')
             except OSError:
-                self.sendCommand('550 MKD failed Directory "%s" already exists.\r\n' % pathname)
+                self.sendResponse('550 MKD failed Directory "%s" already exists.\r\n' % server_path)
 
     def RMD(self, dirname):
+        # Removes specified directory at current path directory
         import shutil
-        pathname = dirname.endswith(os.path.sep) and dirname or os.path.join(self.cwd, dirname)
-        log('RMD', pathname)
+        server_path = dirname.endswith(os.path.sep) and dirname or os.path.join(self.working_directory, dirname)
+        log('RMD', server_path)
+
         if not self.authenticated:
-            self.sendCommand('530 User not logged in.\r\n')
-
+            self.sendResponse('530 User not logged in.\r\n')
         elif not allow_delete:
-            self.sendCommand('450 Directory deleted.\r\n')
-
-        elif not os.path.exists(pathname):
-            self.sendCommand('550 RMDIR failed Directory "%s" not exists.\r\n' % pathname)
-
+            self.sendResponse('450 Directory deleted.\r\n')
+        elif not os.path.exists(server_path):
+            self.sendResponse('550 RMDIR failed Directory "%s" not exists.\r\n' % server_path)
         else:
-            shutil.rmtree(pathname)
-            self.sendCommand('250 Directory deleted.\r\n')
+            shutil.rmtree(server_path)
+            self.sendResponse('250 Directory deleted.\r\n')
 
     def RNFR(self, filename):
-        pathname = filename.endswith(os.path.sep) and filename or os.path.join(self.cwd, filename)
-        log('RNFR', pathname)
-        if not os.path.exists(pathname):
-            self.sendCommand('550 RNFR failed File or Directory %s not exists.\r\n' % pathname)
+        # Specifies the old pathname of the file which is to be renamed
+        server_path = filename.endswith(os.path.sep) and filename or os.path.join(self.working_directory, filename)
+        log('RNFR', server_path)
+
+        if not os.path.exists(server_path):
+            self.sendResponse('550 RNFR failed File or Directory %s not exists.\r\n' % server_path)
         else:
-            self.rnfr = pathname
+            self.rnfr = server_path
 
     def RNTO(self, filename):
-        pathname = filename.endswith(os.path.sep) and filename or os.path.join(self.cwd, filename)
-        log('RNTO', pathname)
+        # Specifies the new pathname of the file specified in the immediately preceding "rename from" command
+        server_path = filename.endswith(os.path.sep) and filename or os.path.join(self.working_directory, filename)
+        log('RNTO', server_path)
+
         if not os.path.exists(os.path.sep):
-            self.sendCommand('550 RNTO failed File or Direcotry  %s not exists.\r\n' % pathname)
+            self.sendResponse('550 RNTO failed File or Direcotry  %s not exists.\r\n' % server_path)
         else:
             try:
-                os.rename(self.rnfr, pathname)
-            except OSError as err:
-                log('RNTO', err)
+                os.rename(self.rnfr, server_path)
+            except OSError as error:
+                log('RNTO', error)
 
     def REST(self, pos):
+        # Represents the server marker at which file transfer is to be restarted
         self.pos  = int(pos)
         log('REST', self.pos)
         self.rest = True
-        self.sendCommand('250 File position reseted.\r\n')
+        self.sendResponse('250 File position reseted.\r\n')
 
     def RETR(self, filename):
-        pathname = os.path.join(self.cwd, filename)
-        log('RETR', pathname)
-        if not os.path.exists(pathname):
+        # Causes server-DTP to transfer a copy of the file, specified in the pathname, to the server- or user-DTP at the other end of the data connection
+        server_path = os.path.join(self.working_directory, filename)
+        log('RETR', server_path)
+
+        if not os.path.exists(server_path):
             return
         try:
             if self.mode=='I':
-                file = open(pathname, 'rb')
+                file = open(server_path, 'rb')
             else:
-                file = open(pathname, 'r')
-        except OSError as err:
-            log('RETR', err)
+                file = open(server_path, 'r')
+        except OSError as error:
+            log('RETR', error)
 
-        self.sendCommand('150 Opening data connection.\r\n')
+        self.sendResponse('150 Opening data connection.\r\n')
+
         if self.rest:
             file.seek(self.pos)
             self.rest = False
 
-        self.startDataSock( )
+        self.createDataSocket()
+
         while True:
-            data = file.read(1048576)
+            data = file.read(binary_buffer)
             if not data: break
             self.sendData(data)
-        file.close( )
-        self.stopDataSock( )
-        self.sendCommand('226 Transfer complete.\r\n')
 
+        file.close()
+        self.terminateDataSocket()
+        self.sendResponse('226 Transfer complete.\r\n')
 
     def STOR(self, filename):
+        # Causes the server-DTP to accept the data transferred via the data connection and to store the data as a file at the server site
         if not self.authenticated:
-            self.sendCommand('530 STOR failed User not logged in.\r\n')
+            self.sendResponse('530 STOR failed User not logged in.\r\n')
             return
 
-        pathname = os.path.join(self.cwd, filename)
-        log('STOR', pathname)
+        server_path = os.path.join(self.working_directory, filename)
+        log('STOR', server_path)
+
         try:
             if self.mode == 'I':
-                file = open(pathname, 'wb')
+                file = open(server_path, 'wb')
             else:
-                file = open(pathname, 'w')
-        except OSError as err:
-            log('STOR', err)
+                file = open(server_path, 'w')
+        except OSError as error:
+            log('STOR', error)
 
-        self.sendCommand('150 Opening data connection.\r\n' )
-        self.startDataSock( )
+        self.sendResponse('150 Opening data connection.\r\n' )
+        self.createDataSocket()
+
         while True:
             if self.mode == 'I':
-                data = self.dataSock.recv(1048576)
+                data = self.data_socket.recv(binary_buffer)
             else:
-                data = self.dataSock.recv(1048576).decode('utf-8')
-            if not data: break
+                data = self.data_socket.recv(binary_buffer).decode('utf-8')
+
+            if not data:
+                break
+
             file.write(data)
-        file.close( )
-        self.stopDataSock( )
-        self.sendCommand('226 Transfer completed.\r\n')
+
+        file.close()
+        self.terminateDataSocket()
+        self.sendResponse('226 Transfer completed.\r\n')
 
     def APPE(self, filename):
+        # Causes the server-DTP to accept the data transferred via the data connection and to store the data in a file at the server site
+        # If file specified in pathname exists at server site, the data shall be appended to that file; otherwise the file shall be created at the server site.
         if not self.authenticated:
-            self.sendCommand('530 APPE failed User not logged in.\r\n')
+            self.sendResponse('530 APPE failed User not logged in.\r\n')
             return
 
-        pathname = filename.endswith(os.path.sep) and filename or os.path.join(self.cwd, filename)
-        log('APPE', pathname)
-        self.sendCommand('150 Opening data connection.\r\n')
-        self.startDataSock( )
-        if not os.path.exists(pathname):
+        server_path = filename.endswith(os.path.sep) and filename or os.path.join(self.working_directory, filename)
+        log('APPE', server_path)
+        self.sendResponse('150 Opening data connection.\r\n')
+        self.createDataSocket()
+
+        if not os.path.exists(server_path):
             if self.mode == 'I':
-                file = open(pathname, 'wb')
+                file = open(server_path, 'wb')
             else:
-                file = open(pathname, 'w')
+                file = open(server_path, 'w')
             while True:
-                data = self.dataSock.recv(1024)
+                data = self.data_socket.recv(ascii_buffer)
                 if not data:
                     break
                 file.write(data)
 
         else:
             n = 1
-            while not os.path.exists(pathname):
-                filename, extname = os.path.splitext(pathname)
-                pathname = filename + '(%s)' %n + extname
+
+            while not os.path.exists(server_path):
+                filename, extname = os.path.splitext(server_path)
+                server_path = filename + '(%s)' %n + extname
                 n += 1
 
             if self.mode == 'I':
-                file = open(pathname, 'wb')
+                file = open(server_path, 'wb')
             else:
-                file = open(pathname, 'w')
+                file = open(server_path, 'w')
             while True:
-                data = self.dataSock.recv(1024)
+                data = self.data_socket.recv(ascii_buffer)
                 if not data:
                     break
                 file.write(data)
-        file.close( )
-        self.stopDataSock( )
-        self.sendCommand('226 Transfer completed.\r\n')
 
-    def SYST(self, arg):
-        log('SYS', arg)
-        self.sendCommand('215 %s type.\r\n' % sys.platform)
+        file.close()
+        self.terminateDataSocket()
+        self.sendResponse('226 Transfer completed.\r\n')
 
-    def HELP(self, arg):
-        log('HELP', arg)
+    def SYST(self, param):
+        # Used to find out the type of operating system at the server
+        log('SYS', param)
+        self.sendResponse('215 %s type.\r\n' % sys.platform)
+
+    def HELP(self, param):
+        # Provides server command list to client
+        log('HELP', param)
         help = """
             214
             USER [name], Its argument is used to specify the user's string. It is used for user authentication.
             PASS [password], Its argument is used to specify the user password string.
             PASV The directive requires server-DTP in a data port.
             PORT [h1, h2, h3, h4, p1, p2] The command parameter is used for the data connection data port
-            LIST [dirpath or filename] This command allows the server to send the list to the passive DTP. If
+            LIST [directory_path or filename] This command allows the server to send the list to the passive DTP. If
                  the pathname specifies a path or The other set of files, the server sends a list of files in
                  the specified directory. Current information if you specify a file path name, the server will
                  send the file.
-            CWD Type a directory path to change working directory.
-            PWD Get current working directory.
+            CWD  Type a directory path to change working directory.
+            PWD  Get current working directory.
             CDUP Changes the working directory on the remote host to the parent of the current directory.
             DELE Deletes the specified remote file.
-            MKD Creates the directory specified in the RemoteDirectory parameter on the remote host.
+            MKD  Creates the directory specified in the RemoteDirectory parameter on the remote host.
             RNFR [old name] This directive specifies the old pathname of the file to be renamed. This command
                  must be followed by a "heavy Named "command to specify the new file pathname.
             RNTO [new name] This directive indicates the above "Rename" command mentioned in the new path name
@@ -417,46 +442,45 @@ class FtpServerProtocol(threading.Thread):
             QUIT This command terminates a user, if not being executed file transfer, the server will shut down
                  Control connection\r\n.
             """
-        self.sendCommand(help)
+        self.sendResponse(help)
 
-    def QUIT(self, arg):
-        log('QUIT', arg)
-        self.sendCommand('221 Goodbye.\r\n')
+    def QUIT(self, param):
+        # Connected user logs out and disconnects from server if not transfer in progress
+        log('QUIT', param)
+        self.sendResponse('221 Goodbye.\r\n')
 
-    def sendWelcome(self):
-        """
-        when connection created with client will send a welcome message to the client
-        """
-        self.sendCommand('220 Welcome.\r\n')
-    
     def IDIR(self, pathServer):
+        # Determines whether path exists on server site
         if os.path.isdir(pathServer):
-            self.sendCommand('True')
+            self.sendResponse('True')
         else:
-            self.sendCommand('False')
+            self.sendResponse('False')
 
+def log(func, client_command):
+    # Provides logger service for server activity
+    log_message = time.strftime("%Y-%m-%d %H-%M-%S [-] " + func)
+    print("\033[31m%s\033[0m: \033[32m%s\033[0m" % (log_message, client_command))
 
-def serverListener( ):
-    global listen_sock
-    listen_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    listen_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    listen_sock.bind((HOST, PORT))
-    listen_sock.listen(5)
+def serverListener():
+    global listen_socket
+    listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    listen_socket.bind((host, port))
+    listen_socket.listen(5)
 
-    log('Server started', 'Listen on: %s, %s' % listen_sock.getsockname( ))
+    log('Server started', 'Listen on: %s, %s' % listen_socket.getsockname())
     while True:
-        connection, address = listen_sock.accept( )
-        f = FtpServerProtocol(connection, address)
-        f.start( )
+        connection, address = listen_socket.accept()
+        ftp_connection_instance = FTPServerProtocol(connection, address)
+        ftp_connection_instance.start()
         log('Accept', 'Created a new connection %s, %s' % address)
 
-
 if __name__ == "__main__":
-    log('Start ftp server', 'Enter q or Q to stop ftpServer...')
+    log('Start FTP server', 'Enter EXIT to stop FTP server...')
     listener = threading.Thread(target=serverListener)
     listener.start()
 
-    if input().lower() == "q":
-        listen_sock.close()
+    if input().lower() == "exit":
+        listen_socket.close()
         log('Server stop', 'Server closed')
         sys.exit()
