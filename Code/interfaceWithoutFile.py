@@ -356,12 +356,14 @@ class Example(QtGui.QMainWindow):
 
         for index, folder in enumerate(folders):
             contents = folder.split(' ')
-            folder = contents[-1]
+            folder = contents[8:]
+            folder = ' '.join(folder)
             folders[index] = folder
 
         for index, file in enumerate(files):
             contents = file.split(' ')
-            file = contents[-1]
+            file = contents[8:]
+            file = ' '.join(file)
             files[index] = file
 
         # print(folders)
