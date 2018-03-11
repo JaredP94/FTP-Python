@@ -1,9 +1,11 @@
-import socket
-import threading
 import os
+import socket
 import stat
 import sys
+import threading
 import time
+import magic
+from pathlib import Path
 from utils import fileProperty
 
 allow_delete = False
@@ -13,7 +15,7 @@ try:
 except socket.gaierror:
     HOST = socket.gethostname()
 PORT = 8000
-CWD  = os.getcwd()
+CWD = os.getcwd()
 
 def log(func, cmd):
         logmsg = time.strftime("%Y-%m-%d %H-%M-%S [-] " + func)
@@ -315,7 +317,7 @@ class FtpServerProtocol(threading.Thread):
         if not self.authenticated:
             self.sendCommand('530 STOR failed User not logged in.\r\n')
             return
-
+            
         pathname = os.path.join(self.cwd, filename)
         log('STOR', pathname)
         try:
@@ -431,6 +433,13 @@ class FtpServerProtocol(threading.Thread):
     
     def IDIR(self, pathServer):
         if os.path.isdir(pathServer):
+            self.sendCommand('True')
+        else:
+            self.sendCommand('False')
+
+    def FTYP(self, pathServer): # file type
+        file = magic.Magic(mime=True)
+        if (file.from_file(pathServer)=='text/plain'):
             self.sendCommand('True')
         else:
             self.sendCommand('False')
