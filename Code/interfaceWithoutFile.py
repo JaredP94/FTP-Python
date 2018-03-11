@@ -78,18 +78,26 @@ class Example(QtGui.QMainWindow):
         grid.addWidget(download, 4, 4,1,1)
         grid.addWidget(upload, 4, 10,1,1)
 
-        ##### View Tree File System #####
-        self.model = QtGui.QFileSystemModel()
+        ####### Create manual file system for server ########
         self.view = QtGui.QTreeView()
+        self.view.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.view.clicked.connect(self.traverseTreeServer)
+        self.model = QtGui.QStandardItemModel()
         self.view.setModel(self.model)
+        self.view.setUniformRowHeights(True)
+
+        ###### Stop the tree from being editable #######
+        self.view.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.view.setHeaderHidden(True)
+        self.view.setAlternatingRowColors(True)
 
         ##### Add file system to grid #####
         grid.addWidget(self.view, 6, 0,5,5)
 
-        ####### Create manual file system ########
+        ####### Create manual file system for local ########
         self.view2 = QtGui.QTreeView()
         self.view2.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        self.view2.clicked.connect(self.pickUploadFile)
+        self.view2.clicked.connect(self.traverseTreeClient)
         self.model2 = QtGui.QStandardItemModel()
         self.view2.setModel(self.model2)
         self.view2.setUniformRowHeights(True)
@@ -98,7 +106,9 @@ class Example(QtGui.QMainWindow):
         self.view2.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.view2.setHeaderHidden(True)
         self.view2.setAlternatingRowColors(True)
+
         grid.addWidget(self.view2, 6, 6,5,5)
+
         ####### Create widgets in QMainWindow #######
         widget = QtGui.QWidget()
         widget.setLayout(grid)
@@ -121,22 +131,63 @@ class Example(QtGui.QMainWindow):
 
         self.action('USER '+'my_name_is_jeff')
         self.action('PASS '+'strongpassword')
-        self.model.setRootPath(QDir.homePath())
 
-        self.updateTree()
+        self.pathServer = self.getCWDServer()
+        self.updateTreeClient()
+        self.updateTreeServer()
 
     def disconnect_from_server(self):
         self.ipAddress.clear()
         self.port.clear()
         self.name.clear()
         self.password.clear()
+
+        self.model.removeRow(0)
+        self.model2.removeRow(0)
         self.s.close()
 
-    def pickUploadFile(self,index):
+    def getCWDServer(self):
+        mes = ('PWD')
+        self.send(mes)
+        directory = self.s.recv(1024)
+        directory = directory.decode()
+        vali = directory.split('i')
+        vali = vali[0].split(' ')
+        vali = vali[0]
+
+        if vali == '257':
+            directory = directory.split('"')
+            directory = directory[1]
+            print('"'+directory+'"')
+        else:
+            print('"'+directory+'"')
+
+        return directory
+
+			# listar()
+
+    def traverseTreeServer(self,index):
+        self.pathServer = self.getTreePathServer(index)
+        self.pathServer = "/" + self.pathServer
+        mes = ('IDIR'+self.pathServer)
+        reply= self.action(mes)
+        print (reply)
+        if b'True' in reply:
+            self.updateTreeServer()
+            indexItem = self.model.index(index.row(), 0, index.parent())
+            self.fileName = self.model.itemFromIndex(indexItem).text()
+            self.filePath = self.getTreePathServer(index)
+            self.model.removeRow(0)
+        else:
+            indexItem = self.model.index(index.row(), 0, index.parent())
+            self.fileName = self.model.itemFromIndex(indexItem).text()
+            self.filePath = self.getTreePathServer(index)
+
+    def traverseTreeClient(self,index):
         self.path = self.getTreePath(index)
         self.path = "/" + self.path
         if os.path.isdir(self.path):
-            self.updateTree()
+            self.updateTreeClient()
             indexItem = self.model2.index(index.row(), 0, index.parent())
             self.fileName = self.model2.itemFromIndex(indexItem).text()
             self.filePath = self.getTreePath(index)
@@ -250,7 +301,38 @@ class Example(QtGui.QMainWindow):
         f.close()
         self.recieve()    
 
-    def updateTree(self):
+    def recievefile(self,file=''):
+        newip, newport = self.pasv()
+        p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        p.connect((newip, newport))
+        self.action('RETR '+file)
+        newfile = open(file, 'wb')
+        msg=''
+        aux=':)'
+
+        while aux != b'':
+            time.sleep(.05)
+            sys.stdout.write("\r" "wait")
+            sys.stdout.flush()
+            aux = p.recv(1048576)
+            newfile.write(aux)
+        newfile.close()
+
+    def listar(self):
+        newip, newport = self.pasv()
+        p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        p.connect((newip, newport))
+        mes = ('NLST')
+        self.action (mes)
+        rec = p.recv(1024)
+        rec = rec.decode()
+        rec.split('\r\n')
+        print(rec)
+        mes = ('ABOR')
+        p.send(bytes(mes + ("\r\n"), "UTF-8"))
+        self.recieve()
+
+    def updateTreeClient(self):
         ####### Get directory structure #######
         pathText = self.local_dir(self.path)
 
@@ -289,7 +371,6 @@ class Example(QtGui.QMainWindow):
             child[counter - 1].appendRow([child[counter+counter2+counter3]])
             counter3 = counter3 + 1
 
-
         ##### Last step: Add the tree to the model ######
         self.model2.appendRow(child[0])
         self.view2.expandAll()
@@ -302,7 +383,57 @@ class Example(QtGui.QMainWindow):
             path.append(name)
             index = index.parent()
         return '/'.join(reversed(path))
-    
+
+    def getTreePathServer(self, index):
+        path = []
+        while index.isValid():
+            indexItem = self.model.index(index.row(), 0, index.parent())
+            name = self.model.itemFromIndex(indexItem).text()
+            path.append(name)
+            index = index.parent()
+        return '/'.join(reversed(path))
+
+    def updateTreeServer(self):
+        ####### Get directory structure #######
+        pathText = self.getCWDServer()
+
+        print("Path in update " + pathText)
+
+        if pathText[0]=="/":
+            pathText = pathText[1:]
+
+        newPath = pathText.split('/')
+        counter = 0
+        child=[]
+
+        for i in newPath:
+            child.append(QtGui.QStandardItem(i)) # item 0 is the parent
+            child[counter].setIcon(self.dir_all)
+            if counter != 0:
+                child[counter-1].appendRow([child[counter]])
+            counter = counter + 1
+
+        # recievedStuff= self.listar()
+        # counter2 = 0
+        # ##### Add folders to tree #####
+        # for i in folders:
+        #     child.append(QtGui.QStandardItem(i))
+        #     child[counter+counter2].setIcon(self.dir_all)
+        #     child[counter - 1].appendRow([child[counter+counter2]])
+        #     counter2 = counter2 + 1
+
+        # counter3 = 0
+        # ##### Add files to tree #####
+        # for i in files:
+        #     child.append(QtGui.QStandardItem(i))
+        #     child[counter+counter2+counter3].setIcon(self.file_all)
+        #     child[counter - 1].appendRow([child[counter+counter2+counter3]])
+        #     counter3 = counter3 + 1
+
+        ##### Last step: Add the tree to the model ######
+        self.model.appendRow(child[0])
+        self.view.expandAll()
+
 def main():
     app = QtGui.QApplication(sys.argv)
     ex = Example()

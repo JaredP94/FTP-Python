@@ -428,6 +428,12 @@ class FtpServerProtocol(threading.Thread):
         when connection created with client will send a welcome message to the client
         """
         self.sendCommand('220 Welcome.\r\n')
+    
+    def IDIR(self, pathServer):
+        if os.path.isdir(pathServer):
+            self.sendCommand('True')
+        else:
+            self.sendCommand('False')
 
 
 def serverListener( ):
