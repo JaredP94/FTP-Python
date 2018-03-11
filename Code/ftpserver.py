@@ -215,7 +215,7 @@ class FTPServerProtocol(threading.Thread):
         # Changes current working directory to parent directory
         self.working_directory = os.path.abspath(os.path.join(self.working_directory, '..'))
         log('CDUP', self.working_directory)
-        self.sendResponse('200 Ok.\r\n')
+        self.sendResponse('200 OK.\r\n')
 
     def DELE(self, filename):
         # Deletes file specified in the pathname to be deleted at the server site
@@ -408,6 +408,11 @@ class FTPServerProtocol(threading.Thread):
         # Used to find out the type of operating system at the server
         log('SYS', param)
         self.sendResponse('215 %s type.\r\n' % sys.platform)
+
+    def NOOP(self, client_command):
+        # Specifies no action other than that the server send an OK reply
+        log('NOOP', client_command)
+        self.sendResponse('200 OK.\r\n')
 
     def HELP(self, param):
         # Provides server command list to client
