@@ -1,16 +1,27 @@
-import sys
-from PyQt4 import QtGui
-from PyQt4.QtGui import (QApplication, QColumnView, QFileSystemModel,
-                         QSplitter, QTreeView)
-from PyQt4.QtCore import QDir, Qt
+import os
 import socket
 import sys
-import os
 import time
-from time import sleep
 from os import walk
 from pathlib import Path
+from time import sleep
+
 import magic
+from PyQt4 import QtGui
+from PyQt4.QtCore import QDir, Qt
+from PyQt4.QtGui import (QApplication, QColumnView, QFileSystemModel,
+                         QSplitter, QTreeView)
+
+styleSheet = """
+QTreeView {
+    alternate-background-color: #FFFFFF;
+    background: #F5F5F5;
+}
+QTreeView::item:selected {
+     background-color: #1d3dec;
+     color: white;
+}
+"""
 
 class Example(QtGui.QMainWindow):
     
@@ -26,6 +37,7 @@ class Example(QtGui.QMainWindow):
         print(self.path)
         self.file_all = style.standardIcon(QtGui.QStyle.SP_FileIcon)
         self.dir_all = style.standardIcon(QtGui.QStyle.SP_DirIcon)
+        self.setStyleSheet(styleSheet)
 
         ############# Create grid ####################
 
