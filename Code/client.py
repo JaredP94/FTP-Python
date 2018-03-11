@@ -106,10 +106,36 @@ def listar():
 	p.connect((newip, newport))
 	mes = ('NLST')
 	action (mes)
-	rec = p.recv(1024)
-	rec = rec.decode()
-	rec.split('\r\n')
-	print(rec)
+	directory = []
+
+	time.sleep(.05)
+	content = p.recv(1024)
+	content = content.decode()
+	directory = content.split('\r\n')
+	directory = directory[:-1]
+
+	folders = []
+	files = []
+
+	for item in directory:
+		if item[0] == 'd':
+			folders.append(item)
+		else:
+			files.append(item)
+
+	for index, folder in enumerate(folders):
+		contents = folder.split(' ')
+		folder = contents[-1]
+		folders[index] = folder
+
+	for index, file in enumerate(files):
+		contents = file.split(' ')
+		file = contents[-1]
+		files[index] = file
+
+	print(folders)
+	print(files)
+
 	mes = ('ABOR')
 	p.send(bytes(mes + ("\r\n"), "UTF-8"))
 	recieve()
@@ -140,21 +166,6 @@ while True:
 			directory = ''
 			os.system('cls' if os.name == 'nt' else 'clear')
 			print('Remote Directory')
-			mes = ('PWD')
-			send(mes)
-			directory = s.recv(1024)
-			directory = directory.decode()
-			vali = directory.split('i')
-			vali = vali[0].split(' ')
-			vali = vali[0]
-
-			if vali == '257':
-				directory = directory.split('"')
-				directory = directory[1]
-				print('"'+directory+'"')
-			else:
-				print('"'+directory+'"')
-
 			listar()
 			print('\nLocal Directory')
 			local_dir(path)
