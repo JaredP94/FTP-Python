@@ -181,6 +181,7 @@ class Example(QtGui.QMainWindow):
     def traverseTreeServer(self,index):
         self.pathServer = self.getTreePathServer(index)
         self.pathServer = "/" + self.pathServer
+        self.action('CWD '+self.pathServer)
         mes = ('IDIR'+self.pathServer)
         reply= self.action(mes)
         print (reply)
@@ -336,13 +337,41 @@ class Example(QtGui.QMainWindow):
         p.connect((newip, newport))
         mes = ('NLST')
         self.action (mes)
-        rec = p.recv(1024)
-        rec = rec.decode()
-        rec.split('\r\n')
-        print(rec)
+        directory = []
+
+        time.sleep(.05)
+        content = p.recv(1024)
+        content = content.decode()
+        directory = content.split('\r\n')
+        directory = directory[:-1]
+
+        folders = []
+        files = []
+
+        for item in directory:
+            if item[0] == 'd':
+                folders.append(item)
+            else:
+                files.append(item)
+
+        for index, folder in enumerate(folders):
+            contents = folder.split(' ')
+            folder = contents[-1]
+            folders[index] = folder
+
+        for index, file in enumerate(files):
+            contents = file.split(' ')
+            file = contents[-1]
+            files[index] = file
+
+        # print(folders)
+        # print(files)
+
         mes = ('ABOR')
         p.send(bytes(mes + ("\r\n"), "UTF-8"))
         self.recieve()
+
+        return (folders,files)
 
     def updateTreeClient(self):
         ####### Get directory structure #######
@@ -425,22 +454,22 @@ class Example(QtGui.QMainWindow):
                 child[counter-1].appendRow([child[counter]])
             counter = counter + 1
 
-        # recievedStuff= self.listar()
-        # counter2 = 0
-        # ##### Add folders to tree #####
-        # for i in folders:
-        #     child.append(QtGui.QStandardItem(i))
-        #     child[counter+counter2].setIcon(self.dir_all)
-        #     child[counter - 1].appendRow([child[counter+counter2]])
-        #     counter2 = counter2 + 1
+        folders,files= self.listar()
+        counter2 = 0
+        ##### Add folders to tree #####
+        for i in folders:
+            child.append(QtGui.QStandardItem(i))
+            child[counter+counter2].setIcon(self.dir_all)
+            child[counter - 1].appendRow([child[counter+counter2]])
+            counter2 = counter2 + 1
 
-        # counter3 = 0
-        # ##### Add files to tree #####
-        # for i in files:
-        #     child.append(QtGui.QStandardItem(i))
-        #     child[counter+counter2+counter3].setIcon(self.file_all)
-        #     child[counter - 1].appendRow([child[counter+counter2+counter3]])
-        #     counter3 = counter3 + 1
+        counter3 = 0
+        ##### Add files to tree #####
+        for i in files:
+            child.append(QtGui.QStandardItem(i))
+            child[counter+counter2+counter3].setIcon(self.file_all)
+            child[counter - 1].appendRow([child[counter+counter2+counter3]])
+            counter3 = counter3 + 1
 
         ##### Last step: Add the tree to the model ######
         self.model.appendRow(child[0])
