@@ -20,10 +20,13 @@ class Example(QtGui.QMainWindow):
         self.initUI()
 
     def initUI(self):      
-
+        style = QApplication.style()
         # self.path = os.getcwd()
         self.path = str(Path.home())
         print(self.path)
+        self.file_all = style.standardIcon(QtGui.QStyle.SP_FileIcon)
+        self.dir_all = style.standardIcon(QtGui.QStyle.SP_DirIcon)
+
         ############# Create grid ####################
 
         download = QtGui.QPushButton("Download")
@@ -236,6 +239,7 @@ class Example(QtGui.QMainWindow):
 
         for i in newPath:
             child.append(QtGui.QStandardItem(i)) # item 0 is the parent
+            child[counter].setIcon(self.dir_all)
             if counter != 0:
                 child[counter-1].appendRow([child[counter]])
             counter = counter + 1
@@ -245,6 +249,7 @@ class Example(QtGui.QMainWindow):
         ##### Add folders to tree #####
         for i in folders:
             child.append(QtGui.QStandardItem(i))
+            child[counter+counter2].setIcon(self.dir_all)
             child[counter - 1].appendRow([child[counter+counter2]])
             counter2 = counter2 + 1
 
@@ -252,6 +257,7 @@ class Example(QtGui.QMainWindow):
         ##### Add files to tree #####
         for i in files:
             child.append(QtGui.QStandardItem(i))
+            child[counter+counter2+counter3].setIcon(self.file_all)
             child[counter - 1].appendRow([child[counter+counter2+counter3]])
             counter3 = counter3 + 1
 
