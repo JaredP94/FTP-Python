@@ -431,15 +431,7 @@ class FtpServerProtocol(threading.Thread):
         """
         self.sendCommand('220 Welcome.\r\n')
     
-    def IDIR(self, pathServer):
-        if os.path.isdir(pathServer):
-            self.sendCommand('True')
-            log("IDIR", 'True')
-        else:
-            self.sendCommand('False')
-            log("IDIR", 'False')
-
-    def FTYP(self, pathServer): # file type
+    def FTYP(self, pathServer): # TODO: remove
         file = magic.Magic(mime=True)
         if (file.from_file(pathServer)=='text/plain'):
             self.sendCommand('True')

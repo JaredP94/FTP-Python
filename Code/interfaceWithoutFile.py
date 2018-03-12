@@ -180,18 +180,19 @@ class Example(QtGui.QMainWindow):
     def traverseTreeServer(self,index):
         self.pathServer = self.getTreePathServer(index)
         self.pathServer = "/" + self.pathServer
-        reply1 = self.action('CWD '+ self.pathServer)
-        mes = ('IDIR'+ self.pathServer)
-        reply= self.action(mes)
-        print(reply1)
+        reply = self.action('CWD '+ self.pathServer)
+        time.sleep(.05)
+        while b'226 Transfer completed.\r\n' in reply:
+            reply=self.recieve()
+
         print(reply)
-        if b'True' in reply:
+        if b'250 CWD Command successful.\r\n' in reply:
             self.updateTreeServer()
             indexItem = self.model.index(index.row(), 0, index.parent())
             self.fileNameServer = self.model.itemFromIndex(indexItem).text()
             self.filePathServer = self.getTreePathServer(index)
             self.model.removeRow(0)
-        else:
+        elif b'550 CWD failed Directory not exists.\r\n' in reply:
             indexItem = self.model.index(index.row(), 0, index.parent())
             self.fileNameServer = self.model.itemFromIndex(indexItem).text()
             self.filePathServer = self.getTreePathServer(index)
@@ -226,7 +227,7 @@ class Example(QtGui.QMainWindow):
 		    vali = ''
 		    mes = ('PASV')
 		    self.send(mes)
-		    mes = (self.s.recv(1024))
+		    mes = self.recieve()
 		    mes = mes.decode()
 		    nmsg = mes.split('(')
 		    nmsg = nmsg[-1].split(')')
@@ -270,7 +271,7 @@ class Example(QtGui.QMainWindow):
                 break
             else:
                 break
-
+        # self.recieve()
         self.recievefile(self.fileNameServer)
 
     def defineFileType(self):
@@ -357,14 +358,15 @@ class Example(QtGui.QMainWindow):
             newfile.write(aux)
         newfile.close()
         test= self.recieve()
-        print(test)
 
     def listar(self):
+        mes = ('TYPE A')
+        self.action(mes)
         newip, newport = self.pasv()
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
         mes = ('NLST')
-        self.action (mes)
+        self.action(mes)
         directory = []
 
         time.sleep(.05)
