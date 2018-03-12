@@ -37,6 +37,7 @@ class Example(QtGui.QMainWindow):
         style = QApplication.style()
         # self.path = os.getcwd()
         self.path = str(Path.home())
+        self.filePath = str(Path.home())
         print(self.path)
         self.file_all = style.standardIcon(QtGui.QStyle.SP_FileIcon)
         self.dir_all = style.standardIcon(QtGui.QStyle.SP_DirIcon)
@@ -53,7 +54,7 @@ class Example(QtGui.QMainWindow):
         disconnectFromServer = QtGui.QPushButton("Disconnect")
         disconnectFromServer.clicked.connect(self.disconnect_from_server)
         grid = QtGui.QGridLayout()
-        grid.setSpacing(12) 
+        grid.setSpacing(10) 
 
         ################ Add widgets to grid ########################
         
@@ -73,26 +74,26 @@ class Example(QtGui.QMainWindow):
         self.password = QtGui.QLineEdit()
         self.password.setFixedWidth(150)
         self.password.setEchoMode(QtGui.QLineEdit.Password)
-        grid.addWidget(ip, 0,0)
+        grid.addWidget(ip, 0,0,1,1)
         grid.addWidget(self.ipAddress, 0,1,1,2)
-        grid.addWidget(portLabel, 0,3)
+        grid.addWidget(portLabel, 0,3,1,1)
         grid.addWidget(self.port,0,4,1,2)
-        grid.addWidget(userName, 1,0,)
+        grid.addWidget(userName, 1,0,1,1)
         grid.addWidget(self.name, 1, 1,1,2)
-        grid.addWidget(password1, 2,0)
+        grid.addWidget(password1, 2,0,1,1)
         grid.addWidget(self.password, 2, 1,1,2)
-        grid.addWidget(connectToServer, 2,3)
-        grid.addWidget(disconnectFromServer, 2,4)
+        grid.addWidget(connectToServer, 2,3,1,1)
+        grid.addWidget(disconnectFromServer, 2,4,1,1)
 
         ######## Labels #########
         server = QtGui.QLabel("Remote")
         local= QtGui.QLabel("Local")
-        grid.addWidget(server, 4, 2,1,1)
-        grid.addWidget(local, 4, 8,1,1)
+        grid.addWidget(server, 3, 2,1,1)
+        grid.addWidget(local, 3, 7,1,1)
 
         ##### Buttons #####
-        grid.addWidget(download, 4, 4,1,1)
-        grid.addWidget(upload, 4, 10,1,1)
+        grid.addWidget(download, 3, 4,1,1)
+        grid.addWidget(upload, 3, 9,1,1)
 
         ####### Create manual file system for server ########
         self.view = QtGui.QTreeView()
@@ -108,7 +109,7 @@ class Example(QtGui.QMainWindow):
         self.view.setAlternatingRowColors(True)
 
         ##### Add file system to grid #####
-        grid.addWidget(self.view, 6, 0,5,5)
+        grid.addWidget(self.view, 4, 0,10,5)
 
         ####### Create manual file system for local ########
         self.view2 = QtGui.QTreeView()
@@ -123,7 +124,15 @@ class Example(QtGui.QMainWindow):
         self.view2.setHeaderHidden(True)
         self.view2.setAlternatingRowColors(True)
 
-        grid.addWidget(self.view2, 6, 6,5,5)
+        grid.addWidget(self.view2, 4, 5,10,5)
+
+        self.logOutput = QtGui.QTextEdit()
+        self.logOutput.setReadOnly(True)
+        self.logOutput.setLineWrapMode(QtGui.QTextEdit.NoWrap)
+        # grid.addWidget(self.logOutput, 15,0,1,10)
+        grid.addWidget(self.logOutput, 0,7,3,3)
+        response= QtGui.QLabel("Server Response")
+        grid.addWidget(response, 0,6,1,1)
 
         ####### Create widgets in QMainWindow #######
         widget = QtGui.QWidget()
@@ -143,7 +152,8 @@ class Example(QtGui.QMainWindow):
         password = self.password.text()
 
         self.s.connect((ip, port))
-        self.s.recv(1024)
+        message=self.s.recv(1024)
+        print(message)
 
         self.action('USER '+'my_name_is_jeff')
         self.action('PASS '+'strongpassword')
@@ -216,8 +226,13 @@ class Example(QtGui.QMainWindow):
             self.filePath = self.getTreePath(index)
 
     def recieve(self):
-	    rec = self.s.recv(1024)
-	    return (rec)
+        rec = self.s.recv(1024)
+        message = rec.decode()
+        self.logOutput.moveCursor(QtGui.QTextCursor.End)
+        self.logOutput.insertPlainText(message)
+        self.sb = self.logOutput.verticalScrollBar()
+        self.sb.setValue(self.sb.maximum())
+        return (rec)
 	    
     def action(self,mes=''):
 	    self.send(mes)
@@ -352,7 +367,9 @@ class Example(QtGui.QMainWindow):
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
         self.action('RETR '+file)
-        newfile = open(file, 'wb')
+        filePath="/" + self.filePath + '/'
+        fileName = filePath + file
+        newfile = open(fileName, 'wb')
         msg=''
         aux=':)'
 
