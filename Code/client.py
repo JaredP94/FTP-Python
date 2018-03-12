@@ -7,6 +7,8 @@ from os import walk
 
 s = socket.socket()
 
+binary_buffer = 4194304
+
 def send(mes=''):
 	s.send(bytes(mes + ("\r\n"), "UTF-8"))
 
@@ -55,8 +57,8 @@ def sendfile(file=''):
 	size = os.stat(filepath)[6]
 	opened = True
 	pos = 0
-	buff = 1048576
-	packs = size/1048576
+	buff = binary_buffer
+	packs = size/binary_buffer
 	timeb = 100/packs
 	i=0
 
@@ -96,7 +98,7 @@ def recievefile(file=''):
 		time.sleep(.05)
 		sys.stdout.write("\r" "wait")
 		sys.stdout.flush()
-		aux = p.recv(1048576)
+		aux = p.recv(binary_buffer)
 		newfile.write(aux)
 	newfile.close()
 
@@ -357,6 +359,7 @@ while True:
 		os.system('cls' if os.name == 'nt' else 'clear')
 		print('FTP client now exiting')
 		print(input('\nHit return to exit'))
+		send('QUIT')
 		break
 
 s.close()                  

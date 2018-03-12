@@ -23,6 +23,8 @@ QTreeView::item:selected {
 }
 """
 
+binary_buffer = 4194304
+
 class Example(QtGui.QMainWindow):
     
     def __init__(self):
@@ -312,8 +314,8 @@ class Example(QtGui.QMainWindow):
         size = os.stat(self.filePath)[6]
         opened = True
         pos = 0
-        buff = 1048576
-        packs = size/1048576
+        buff = binary_buffer
+        packs = size/binary_buffer
         timeb = 100/packs
         i=0
 
@@ -354,7 +356,7 @@ class Example(QtGui.QMainWindow):
             time.sleep(.05)
             sys.stdout.write("\r" "wait")
             sys.stdout.flush()
-            aux = p.recv(1048576)
+            aux = p.recv(binary_buffer)
             newfile.write(aux)
         newfile.close()
         test= self.recieve()
