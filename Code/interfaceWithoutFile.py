@@ -160,6 +160,7 @@ class Example(QtGui.QMainWindow):
 
         self.model.removeRow(0)
         self.model2.removeRow(0)
+        self.action('QUIT')
         self.s.close()
 
     def getCWDServer(self):
@@ -254,7 +255,6 @@ class Example(QtGui.QMainWindow):
     def findExtension(self, filename):
         listOfAscii = ['html', 'php', 'cgi', 'js','txt','css']
         filetype, encoding = mimetypes.guess_type(filename)
-        print (filetype)
         for i in listOfAscii:
             if i in filetype:
                 return 'TYPE A'
@@ -278,7 +278,7 @@ class Example(QtGui.QMainWindow):
                 break
             else:
                 break
-        # self.recieve()
+
         self.recievefile(self.fileNameServer)
 
     def defineFileType(self):
@@ -313,7 +313,6 @@ class Example(QtGui.QMainWindow):
         newip, newport = self.pasv()
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
-        print (self.filePath)
         self.send('STOR ' + self.fileName)
         f = open(self.filePath, 'rb')
         size = os.stat(self.filePath)[6]
@@ -377,8 +376,14 @@ class Example(QtGui.QMainWindow):
         directory = []
 
         time.sleep(.05)
-        content = p.recv(1024)
-        content = content.decode()
+        content =''
+        while True:
+            data = p.recv(1024)
+            data = data.decode()
+            content = content + data
+            if not data:
+                break
+
         directory = content.split('\r\n')
         directory = directory[:-1]
 
@@ -406,10 +411,6 @@ class Example(QtGui.QMainWindow):
         mes = ('ABOR')
         p.send(bytes(mes + ("\r\n"), "UTF-8"))
         self.recieve()
-        print("folders are: " )
-        print (folders)
-        print ("files are:")
-        print(files)
         p.close()
         return (folders,files)
 
@@ -417,13 +418,10 @@ class Example(QtGui.QMainWindow):
         ####### Get directory structure #######
         pathText = self.local_dir(self.path)
 
-        print("Path in update " + pathText)
-
         if pathText[0]=="/":
             pathText = pathText[1:]
 
         newPath = pathText.split('/')
-        print(newPath)
 
         counter = 0
         child=[]
