@@ -5,6 +5,7 @@ import time
 from os import walk
 from pathlib import Path
 from time import sleep
+import mimetypes
 
 import magic
 from PyQt4 import QtGui
@@ -250,15 +251,19 @@ class Example(QtGui.QMainWindow):
             break
         return (dirnames, filenames)
 
+    def findExtension(self, filename):
+        listOfAscii = ['html', 'php', 'cgi', 'js','txt','css']
+        filetype, encoding = mimetypes.guess_type(filename)
+        print (filetype)
+        for i in listOfAscii:
+            if i in filetype:
+                return 'TYPE A'
+        return 'TYPE I'
+
     def defineDownloadType(self):
         self.filePathServer="/" + self.filePathServer
-        mes = ('FTYP'+self.filePathServer)
-        reply= self.action(mes)
-        if b'True' in reply:
-            mes = ('TYPE A')
-        else:
-            mes = ('TYPE I')
-        self.send(mes)
+        mes= self.findExtension(self.fileNameServer)
+        reply= self.send(mes)
         while True:
             vali = self.recieve()
             vali = vali.decode()

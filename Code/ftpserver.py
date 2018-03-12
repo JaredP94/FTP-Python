@@ -471,22 +471,6 @@ class FTPServerProtocol(threading.Thread):
         log('QUIT', param)
         self.sendResponse('221 Goodbye.\r\n')
 
-    def IDIR(self, pathServer):
-        # Determines whether path exists on server site
-        if os.path.isdir(pathServer):
-            self.sendResponse('True')
-            log("IDIR", 'True')
-        else:
-            self.sendResponse('False')
-            log("IDIR", 'False')
-
-    def FTYP(self, pathServer): # file type
-        file = magic.Magic(mime=True)
-        if (file.from_file(pathServer)=='text/plain'):
-            self.sendResponse('True')
-        else:
-            self.sendResponse('False')
-
 def log(func, client_command):
     # Provides logger service for server activity
     log_message = time.strftime("%Y-%m-%d %H-%M-%S [-] " + func)
