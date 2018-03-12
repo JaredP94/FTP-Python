@@ -157,8 +157,8 @@ class Example(QtGui.QMainWindow):
 
         # self.action('USER '+'my_name_is_jeff')
         # self.action('PASS '+'strongpassword')
-        self.action('USER '+'anonymous')
-        self.action('PASS '+'guest')
+        # self.action('USER '+'anonymous')
+        # self.action('PASS '+'guest')
         self.pathServer = self.getCWDServer()
         self.updateTreeClient()
         self.updateTreeServer()
@@ -174,7 +174,7 @@ class Example(QtGui.QMainWindow):
         self.action('QUIT')
         self.s.close()
 
-    def getCWDServer(self):
+    def getPWDServer(self):
         mes = ('PWD')
         self.send(mes)
         directory = self.s.recv(1024)
@@ -492,7 +492,7 @@ class Example(QtGui.QMainWindow):
 
     def updateTreeServer(self):
         ####### Get directory structure #######
-        pathText = self.getCWDServer()
+        pathText = self.getPWDServer()
 
         print("Path in update " + pathText)
 
