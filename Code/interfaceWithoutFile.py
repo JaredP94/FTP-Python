@@ -155,9 +155,10 @@ class Example(QtGui.QMainWindow):
         message=self.s.recv(1024)
         print(message)
 
-        self.action('USER '+'my_name_is_jeff')
-        self.action('PASS '+'strongpassword')
-
+        # self.action('USER '+'my_name_is_jeff')
+        # self.action('PASS '+'strongpassword')
+        self.action('USER '+'anonymous')
+        self.action('PASS '+'guest')
         self.pathServer = self.getCWDServer()
         self.updateTreeClient()
         self.updateTreeServer()
@@ -196,17 +197,17 @@ class Example(QtGui.QMainWindow):
         self.pathServer = "/" + self.pathServer
         reply = self.action('CWD '+ self.pathServer)
         time.sleep(.05)
-        while b'226 Transfer completed.\r\n' in reply:
+        while b'226' in reply:
             reply=self.recieve()
 
         print(reply)
-        if b'250 CWD Command successful.\r\n' in reply:
+        if b'250' in reply:
             self.updateTreeServer()
             indexItem = self.model.index(index.row(), 0, index.parent())
             self.fileNameServer = self.model.itemFromIndex(indexItem).text()
             self.filePathServer = self.getTreePathServer(index)
             self.model.removeRow(0)
-        elif b'550 CWD failed Directory not exists.\r\n' in reply:
+        elif b'550' in reply:
             indexItem = self.model.index(index.row(), 0, index.parent())
             self.fileNameServer = self.model.itemFromIndex(indexItem).text()
             self.filePathServer = self.getTreePathServer(index)
