@@ -384,28 +384,32 @@ class Example(QtGui.QMainWindow):
         newfile.close()
         test= self.recieve()
 
-    def listar(self):
+    def listar(self, pathText):
         mes = ('TYPE A')
         self.action(mes)
         newip, newport = self.pasv()
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
-        mes = ('NLST')
+        mes = ('STAT '+ pathText)
         self.action(mes)
         directory = []
 
-        time.sleep(.05)
         content =''
+        print ("Before while")
         while True:
-            data = p.recv(1024)
+            print ("In while")
+            data = p.recv(2048)
             data = data.decode()
-            content = content + data
-            if not data:
+            if "213 End" in data:
                 break
+            content = content + data
 
+        print ("Directory received: ")
+        print (content)
         directory = content.split('\r\n')
         directory = directory[:-1]
-
+        print ("Directory received after split: ")
+        print (directory)
         folders = []
         files = []
 
@@ -427,6 +431,8 @@ class Example(QtGui.QMainWindow):
             file = ' '.join(file)
             files[index] = file
 
+        print (folders)
+        print(files)
         mes = ('ABOR')
         p.send(bytes(mes + ("\r\n"), "UTF-8"))
         self.recieve()
@@ -497,10 +503,13 @@ class Example(QtGui.QMainWindow):
 
         print("Path in update " + pathText)
 
-        if pathText[0]=="/":
-            pathText = pathText[1:]
+        if pathText[0]=="/" and len(pathText)==1:
+            newPath = pathText
 
-        newPath = pathText.split('/')
+        elif pathText[0]=="/":
+            pathText = pathText[1:]
+            newPath = pathText.split('/')
+
         counter = 0
         child=[]
 
@@ -511,7 +520,7 @@ class Example(QtGui.QMainWindow):
                 child[counter-1].appendRow([child[counter]])
             counter = counter + 1
 
-        folders,files= self.listar()
+        folders,files= self.listar(newPath)
         counter2 = 0
         ##### Add folders to tree #####
         for i in folders:
