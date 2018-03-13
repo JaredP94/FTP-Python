@@ -441,14 +441,14 @@ class FTPServerProtocol(threading.Thread):
         self.terminateDataSocket()
         self.sendResponse('226 Transfer completed.\r\n')
 
-    def SYST(self):
+    def SYST(self, client_command):
         # Used to find out the type of operating system at the server
-        log('SYS')
+        log('SYST', client_command)
         self.sendResponse('215 %s type.\r\n' % sys.platform)
 
-    def NOOP(self):
+    def NOOP(self, client_command):
         # Specifies no action other than that the server send an OK reply
-        log('NOOP')
+        log('NOOP', client_command)
         self.sendResponse('200 OK.\r\n')
 
     def HELP(self, param):
