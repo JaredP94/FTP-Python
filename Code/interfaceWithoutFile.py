@@ -152,14 +152,15 @@ class Example(QtGui.QMainWindow):
         password = self.password.text()
 
         self.s.connect((ip, port))
-        message=self.s.recv(1024)
-        print(message)
+        self.recieve()
 
+        self.action('USER '+ username)
+        self.action('PASS '+ password)
         # self.action('USER '+'my_name_is_jeff')
         # self.action('PASS '+'strongpassword')
         # self.action('USER '+'anonymous')
         # self.action('PASS '+'guest')
-        self.pathServer = self.getCWDServer()
+        self.pathServer = self.getPWDServer()
         self.updateTreeClient()
         self.updateTreeServer()
 
