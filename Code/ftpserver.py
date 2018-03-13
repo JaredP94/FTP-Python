@@ -53,12 +53,13 @@ class FTPServerProtocol(threading.Thread):
                 func = getattr(self, client_command)
                 func(param)
             except AttributeError as error:
-                self.sendResponse('500 Syntax error, command unrecognized.\r\n')
+                self.sendResponse('500 Syntax error, command unrecognized. '
+                    'This may include errors such as command line too long.\r\n')
                 log('Receive', error)
 
     def connectionSuccess(self):
         # Provide greeting for accepted user connection
-        self.sendResponse('220 Welcome.\r\n')
+        self.sendResponse('220 Service ready for new user.\r\n')
 
     #=======================================#
     ## FTP transmission control procedures ##
@@ -133,6 +134,8 @@ class FTPServerProtocol(threading.Thread):
             self.sendResponse('200 Binary file mode.\r\n')
         elif self.type == 'A':
             self.sendResponse('200 Ascii file mode.\r\n')
+        else:
+            self.sendResponse('501 Syntax error in parameters or arguments.\r\n')
 
     def PASV(self, client_command):
         # Makes server-DTP "listen" on a non-default data port to wait for a connection rather than initiate one upon receipt of a transfer command
@@ -154,9 +157,11 @@ class FTPServerProtocol(threading.Thread):
         if self.type == 'S':
             self.sendResponse('200 Stream transfer mode.\r\n')
         elif self.type == 'B':
-            self.sendResponse('200 Block transfer mode.\r\n')
+            self.sendResponse('502 Command not implemented.\r\n')
         elif self.type == 'C':
-            self.sendResponse('200 Compressed transfer mode.\r\n')
+            self.sendResponse('502 Command not implemented.\r\n')
+        else:
+            self.sendResponse('501 Syntax error in parameters or arguments.\r\n')
 
     def STRU(self, file_structure):
         # Specifies file structure type for server
@@ -166,11 +171,16 @@ class FTPServerProtocol(threading.Thread):
         if self.type == 'F':
             self.sendResponse('200 File Strcture = File.\r\n')
         elif self.type == 'R':
-            self.sendResponse('200 File Strcture = Record.\r\n')
+            self.sendResponse('502 Command not implemented.\r\n')
         elif self.type == 'P':
-            self.sendResponse('200 File Strcture = Page.\r\n')
+            self.sendResponse('502 Command not implemented.\r\n')
 
-    def PORT(self,client_command):
+    def STAT(self, client_command):
+        # Specifies file structure type for server
+        log('STAT', client_command)
+        self.sendResponse('502 Command not implemented.\r\n')
+
+    def PORT(self, client_command):
         # Specify the port to be used for data transmission
         log("PORT: ", client_command)
         if self.pasv_mode:
@@ -316,7 +326,7 @@ class FTPServerProtocol(threading.Thread):
         self.pos  = int(pos)
         log('REST', self.pos)
         self.rest = True
-        self.sendResponse('250 File position reseted.\r\n')
+        self.sendResponse('250 File position reset.\r\n')
 
     def RETR(self, filename):
         # Causes server-DTP to transfer a copy of the file, specified in the pathname, to the server- or user-DTP at the other end of the data connection
@@ -431,14 +441,14 @@ class FTPServerProtocol(threading.Thread):
         self.terminateDataSocket()
         self.sendResponse('226 Transfer completed.\r\n')
 
-    def SYST(self, param):
+    def SYST(self):
         # Used to find out the type of operating system at the server
-        log('SYS', param)
+        log('SYS')
         self.sendResponse('215 %s type.\r\n' % sys.platform)
 
-    def NOOP(self, client_command):
+    def NOOP(self):
         # Specifies no action other than that the server send an OK reply
-        log('NOOP', client_command)
+        log('NOOP')
         self.sendResponse('200 OK.\r\n')
 
     def HELP(self, param):
@@ -471,7 +481,7 @@ class FTPServerProtocol(threading.Thread):
                  stored as A file server site.
             APPE This command allows server-DTP to receive data transmitted via a data connection, and data is stored
                  as A file server site.
-            SYS  This command is used to find the server's operating system type.
+            SYST  This command is used to find the server's operating system type.
             HELP Displays help information.
             QUIT This command terminates a user, if not being executed file transfer, the server will shut down
                  Control connection\r\n.
@@ -483,7 +493,7 @@ class FTPServerProtocol(threading.Thread):
         log('QUIT', param)
         self.sendResponse('221 Goodbye.\r\n')
 
-def log(func, client_command):
+def log(func, client_command=''):
     # Provides logger service for server activity
     log_message = time.strftime("%Y-%m-%d %H-%M-%S [-] " + func)
     print("\033[31m%s\033[0m: \033[32m%s\033[0m" % (log_message, client_command))
