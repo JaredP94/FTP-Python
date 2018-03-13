@@ -395,21 +395,15 @@ class Example(QtGui.QMainWindow):
         directory = []
 
         content =''
-        print ("Before while")
         while True:
-            print ("In while")
-            data = p.recv(2048)
+            data = p.recv(1024)
             data = data.decode()
-            if "213 End" in data:
+            if not data:
                 break
             content = content + data
 
-        print ("Directory received: ")
-        print (content)
         directory = content.split('\r\n')
         directory = directory[:-1]
-        print ("Directory received after split: ")
-        print (directory)
         folders = []
         files = []
 
@@ -420,15 +414,15 @@ class Example(QtGui.QMainWindow):
                 files.append(item)
 
         for index, folder in enumerate(folders):
-            contents = folder.split(' ')
-            folder = contents[8:]
-            folder = ' '.join(folder)
+            contents = folder.split(':')
+            folder = contents[1]
+            folder = folder[3:]
             folders[index] = folder
 
         for index, file in enumerate(files):
-            contents = file.split(' ')
-            file = contents[8:]
-            file = ' '.join(file)
+            contents = file.split(':')
+            file = contents[1]
+            file = file[3:]
             files[index] = file
 
         print (folders)
