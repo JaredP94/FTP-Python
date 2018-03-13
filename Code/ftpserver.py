@@ -458,21 +458,24 @@ class FTPServerProtocol(threading.Thread):
             214
             USER [name], Its argument is used to specify the user's string. It is used for user authentication.
             PASS [password], Its argument is used to specify the user password string.
+            TYPE [type], Its argument is used to specify the file type.
             PASV The directive requires server-DTP in a data port.
-            PORT [h1, h2, h3, h4, p1, p2] The command parameter is used for the data connection data port
-            LIST [directory_path or filename] This command allows the server to send the list to the passive DTP. If
-                 the pathname specifies a path or The other set of files, the server sends a list of files in
+            MODE [mode], Its argument is used to specify the data transfer type.
+            STRU [structure], Its argument is used to specify the file structure.
+            PORT [h1, h2, h3, h4, p1, p2], The command parameter is used for the data connection data port
+            LIST [directory_path or filename], This command allows the server to send the list to the passive DTP.
+                 If the pathname specifies a path or The other set of files, the server sends a list of files in
                  the specified directory. Current information if you specify a file path name, the server will
                  send the file.
-            CWD  Type a directory path to change working directory.
+            NLST [directory_path or filename], This command calls LIST with the provided argument.
+            CWD  [path], Its argument is used to specify a new working directory.
             PWD  Get current working directory.
             CDUP Changes the working directory on the remote host to the parent of the current directory.
-            DELE Deletes the specified remote file.
-            MKD  Creates the directory specified in the RemoteDirectory parameter on the remote host.
-            RNFR [old name] This directive specifies the old pathname of the file to be renamed. This command
-                 must be followed by a "heavy Named "command to specify the new file pathname.
-            RNTO [new name] This directive indicates the above "Rename" command mentioned in the new path name
-                 of the file. These two Directive together to complete renaming files.
+            DELE [filename], Its argument is used to specify the file to be deleted.
+            MKD  [directory_name] Its argument is used to create the directory specified in the RemoteDirectory
+                 parameter on the remote host.
+            RNFR [old name], Its argument is used to specify the file to be renamed (RNTO must follow).
+            RNTO [new name] Its argument is used to specify the new name of the file to be renamed (from RNFR).
             REST [position] Marks the beginning (REST) ​​The argument on behalf of the server you want to re-start
                  the file transfer. This command and Do not send files, but skip the file specified data checkpoint.
             RETR This command allows server-FTP send a copy of a file with the specified path name to the data
@@ -481,7 +484,8 @@ class FTPServerProtocol(threading.Thread):
                  stored as A file server site.
             APPE This command allows server-DTP to receive data transmitted via a data connection, and data is stored
                  as A file server site.
-            SYST  This command is used to find the server's operating system type.
+            SYST This command is used to find the server's operating system type.
+            NOOP This command executes no action other than prompting a 200 OK response from the server.
             HELP Displays help information.
             QUIT This command terminates a user, if not being executed file transfer, the server will shut down
                  Control connection\r\n.
