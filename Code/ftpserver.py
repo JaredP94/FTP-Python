@@ -30,6 +30,7 @@ class FTPServerProtocol(threading.Thread):
         self.address            = address
         self.type               = 'A'
         self.mode               = 'S'
+        self.file_structure     = 'F'
 
     def run(self):
         # Handles and executes received user commands
@@ -157,6 +158,17 @@ class FTPServerProtocol(threading.Thread):
         elif self.type == 'C':
             self.sendResponse('200 Compressed transfer mode.\r\n')
 
+    def STRU(self, file_structure):
+        # Specifies file structure type for server
+        log('STRU', file_structure)
+        self.file_structure = file_structure
+
+        if self.type == 'F':
+            self.sendResponse('200 File Strcture = File.\r\n')
+        elif self.type == 'R':
+            self.sendResponse('200 File Strcture = Record.\r\n')
+        elif self.type == 'P':
+            self.sendResponse('200 File Strcture = Page.\r\n')
 
     def PORT(self,client_command):
         # Specify the port to be used for data transmission
