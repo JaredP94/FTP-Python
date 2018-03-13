@@ -42,6 +42,9 @@ class Example(QtGui.QMainWindow):
         self.file_all = style.standardIcon(QtGui.QStyle.SP_FileIcon)
         self.dir_all = style.standardIcon(QtGui.QStyle.SP_DirIcon)
         self.setStyleSheet(styleSheet)
+        self.password=''
+        self.username=''
+        self.newDir = ''
 
         ############# Create grid ####################
 
@@ -53,6 +56,8 @@ class Example(QtGui.QMainWindow):
         connectToServer.clicked.connect(self.connect_to_server)
         disconnectFromServer = QtGui.QPushButton("Disconnect")
         disconnectFromServer.clicked.connect(self.disconnect_from_server)
+        makeDirectory = QtGui.QPushButton("Create Directory")
+        makeDirectory.clicked.connect(self.mkdir)
         grid = QtGui.QGridLayout()
         grid.setSpacing(10) 
 
@@ -94,6 +99,7 @@ class Example(QtGui.QMainWindow):
         ##### Buttons #####
         grid.addWidget(download, 3, 4,1,1)
         grid.addWidget(upload, 3, 9,1,1)
+        grid.addWidget(makeDirectory, 3, 0,1,1)
 
         ####### Create manual file system for server ########
         self.view = QtGui.QTreeView()
@@ -148,18 +154,18 @@ class Example(QtGui.QMainWindow):
         self.s = socket.socket()
         ip = self.ipAddress.text()
         port = int( self.port.text() )
-        username = self.name.text()
-        password = self.password.text()
+        self.username = self.name.text()
+        self.password = self.password.text()
 
         self.s.connect((ip, port))
         self.recieve()
 
-        self.action('USER '+ username)
-        self.action('PASS '+ password)
+        self.action('USER '+ self.username)
+        self.action('PASS '+ self.password)
         # self.action('USER '+'my_name_is_jeff')
         # self.action('PASS '+'strongpassword')
-        # self.action('USER '+'anonymous')
-        # self.action('PASS '+'guest')
+        self.action('USER '+'group2')
+        self.action('PASS '+'ei9keNge')
         self.pathServer = self.getPWDServer()
         self.updateTreeClient()
         self.updateTreeServer()
@@ -237,7 +243,10 @@ class Example(QtGui.QMainWindow):
         self.logOutput.moveCursor(QtGui.QTextCursor.End)
         self.logOutput.insertPlainText(message)
         self.sb = self.logOutput.verticalScrollBar()
-        self.sb.setValue(self.sb.maximum())   
+        self.sb.setValue(self.sb.maximum()) 
+        # if '530' or '421' in message:
+        #     self.action('USER '+ self.username)
+        #     self.action('PASS '+ self.password)  
 
     def action(self,mes=''):
 	    self.send(mes)
@@ -302,7 +311,7 @@ class Example(QtGui.QMainWindow):
         self.recievefile(self.fileNameServer)
 
     def defineFileType(self):
-        self.filePath="/" + self.filePath
+        self.filePath ="/" + self.filePath
         file = magic.Magic(mime=True)
         if (file.from_file(self.filePath)=='text/plain'):
             mes = ('TYPE A')
@@ -510,7 +519,8 @@ class Example(QtGui.QMainWindow):
         elif pathText[0]=="/":
             pathText = pathText[1:]
             newPath = pathText.split('/')
-            newPath.insert(0, '/')
+            print(newPath)
+            newPath= [x.strip() for x in newPath if x.strip()]
 
         counter = 0
         child=[]
@@ -542,6 +552,26 @@ class Example(QtGui.QMainWindow):
         ##### Last step: Add the tree to the model ######
         self.model.appendRow(child[0])
         self.view.expandAll()
+
+    def mkdir(self):      
+        text, ok = QtGui.QInputDialog.getText(self, 'Create Directory', 
+        'Enter the directory name:')
+        
+        if ok:
+            self.newDir=(str(text))
+            self.makeNewDirectory()  
+
+    def makeNewDirectory(self):
+        filePath = self.pathServer
+        print("path in makeDirectory: ")
+        print (filePath)
+        if not os.path.isdir(filePath):
+            index=filePath.rfind('/')
+            filePath=filePath[:index]
+
+        filePath = filePath + '/' + self.newDir
+        self.action('MKD '+filePath)
+
             
 def main():
     app = QtGui.QApplication(sys.argv)
