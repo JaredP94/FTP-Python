@@ -390,7 +390,7 @@ class Example(QtGui.QMainWindow):
         newip, newport = self.pasv()
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
-        mes = ('NLST')
+        mes = ('LIST')
         self.action(mes)
         directory = []
 
