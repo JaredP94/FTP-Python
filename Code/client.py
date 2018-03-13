@@ -106,13 +106,14 @@ def listar():
 	newip, newport = pasv()
 	p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	p.connect((newip, newport))
-	mes = ('NLST')
+	mes = ('LIST')
 	action (mes)
 	directory = []
 
 	time.sleep(.05)
 	content = p.recv(1024)
 	content = content.decode()
+	print(content)
 	directory = content.split('\r\n')
 	directory = directory[:-1]
 
@@ -126,15 +127,15 @@ def listar():
 			files.append(item)
 			
 	for index, folder in enumerate(folders):
-		contents = folder.split(' ')
-		folder = contents[8:]
-		folder = ' '.join(folder)
+		contents = folder.split(':')
+		folder = contents[1]
+		folder = folder[3:]
 		folders[index] = folder
 
 	for index, file in enumerate(files):
-		contents = file.split(' ')
-		file = contents[8:]
-		file = ' '.join(file)
+		contents = file.split(':')
+		file = contents[1]
+		file = file[3:]
 		files[index] = file
 
 	print(folders)
@@ -149,8 +150,8 @@ port = int(input("Enter FTP Port: "))
 s.connect((address, port))
 s.recv(1024)		
 		
-action('USER '+'my_name_is_jeff')
-action('PASS '+'strongpassword')
+action('USER '+'group2')
+action('PASS '+'ei9keNge')
 
 path = os.getcwd()
 buff=1024
