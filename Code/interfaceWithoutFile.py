@@ -230,12 +230,15 @@ class Example(QtGui.QMainWindow):
     def recieve(self):
         rec = self.s.recv(1024)
         message = rec.decode()
+        self.printToLog(message)
+        return (rec)
+
+    def printToLog(self,message):
         self.logOutput.moveCursor(QtGui.QTextCursor.End)
         self.logOutput.insertPlainText(message)
         self.sb = self.logOutput.verticalScrollBar()
-        self.sb.setValue(self.sb.maximum())
-        return (rec)
-	    
+        self.sb.setValue(self.sb.maximum())   
+
     def action(self,mes=''):
 	    self.send(mes)
 	    return self.recieve()
@@ -369,7 +372,11 @@ class Example(QtGui.QMainWindow):
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
         self.action('RETR '+file)
-        filePath="/" + self.filePath + '/'
+        filePath = "/" + self.filePath
+        if not os.path.isdir(filePath):
+            index=filePath.rfind('/')
+            filePath=filePath[:index]
+        filePath = filePath + '/'
         fileName = filePath + file
         newfile = open(fileName, 'wb')
         msg=''
@@ -503,6 +510,7 @@ class Example(QtGui.QMainWindow):
         elif pathText[0]=="/":
             pathText = pathText[1:]
             newPath = pathText.split('/')
+            newPath.insert(0, '/')
 
         counter = 0
         child=[]
@@ -534,7 +542,7 @@ class Example(QtGui.QMainWindow):
         ##### Last step: Add the tree to the model ######
         self.model.appendRow(child[0])
         self.view.expandAll()
-
+            
 def main():
     app = QtGui.QApplication(sys.argv)
     ex = Example()
