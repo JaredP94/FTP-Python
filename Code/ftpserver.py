@@ -15,7 +15,7 @@ except socket.gaierror:
 
 port = 21
 working_directory  = os.getcwd()
-allow_delete = False
+allow_delete = True
 ascii_buffer = 1024
 binary_buffer = 4194304
 
@@ -291,7 +291,7 @@ class FTPServerProtocol(threading.Thread):
         if not self.authenticated:
             self.sendResponse('530 User not logged in.\r\n')
         elif not allow_delete:
-            self.sendResponse('450 Directory deleted.\r\n')
+            self.sendResponse('450 Invalid permissions.\r\n')
         elif not os.path.exists(server_path):
             self.sendResponse('550 RMDIR failed Directory "%s" not exists.\r\n' % server_path)
         else:
