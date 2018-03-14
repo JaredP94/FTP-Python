@@ -225,7 +225,7 @@ class FTPServerProtocol(threading.Thread):
         elif directory_path.startswith(os.path.sep):
             server_path = os.path.abspath(directory_path)
         else:
-            server_path = os.path.abspath(os.path.join(self.base_path, directory_path))
+            server_path = os.path.abspath(os.path.join(self.base_path + self.working_directory, '.'))
 
         log('LIST', server_path)
 
@@ -324,7 +324,7 @@ class FTPServerProtocol(threading.Thread):
 
     def RNFR(self, filename):
         # Specifies the old pathname of the file which is to be renamed
-        server_path = self.base_path + self.working_directory + filename
+        server_path = self.base_path + filename
         log('RNFR', server_path)
 
         if not os.path.exists(server_path):
@@ -334,7 +334,7 @@ class FTPServerProtocol(threading.Thread):
 
     def RNTO(self, filename):
         # Specifies the new pathname of the file specified in the immediately preceding "rename from" command
-        server_path = self.base_path + self.working_directory + filename
+        server_path = self.base_path + filename
         log('RNTO', server_path)
 
         if not os.path.exists(os.path.sep):
@@ -354,7 +354,7 @@ class FTPServerProtocol(threading.Thread):
 
     def RETR(self, filename):
         # Causes server-DTP to transfer a copy of the file, specified in the pathname, to the server- or user-DTP at the other end of the data connection
-        server_path = os.path.join(self.base_path + self.working_directory, filename)
+        server_path = self.base_path + filename
         log('RETR', server_path)
 
         if not os.path.exists(server_path):
@@ -391,7 +391,7 @@ class FTPServerProtocol(threading.Thread):
             self.sendResponse('530 STOR failed User not logged in.\r\n')
             return
 
-        server_path = os.path.join(self.base_path + self.working_directory, filename)
+        server_path = self.base_path + filename
         log('STOR', server_path)
 
         try:
