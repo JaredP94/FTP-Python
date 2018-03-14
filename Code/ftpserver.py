@@ -13,7 +13,7 @@ try:
 except socket.gaierror:
     host = socket.gethostname()
 
-port = 8000
+port = 21
 working_directory  = os.getcwd()
 allow_delete = False
 ascii_buffer = 1024
