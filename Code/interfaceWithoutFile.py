@@ -60,6 +60,8 @@ class Example(QtGui.QMainWindow):
         disconnectFromServer.clicked.connect(self.disconnect_from_server)
         makeDirectory = QtGui.QPushButton("Create Directory")
         makeDirectory.clicked.connect(self.mkdir)
+        delete = QtGui.QPushButton("Delete")
+        delete.clicked.connect(self.deleteDir)
 
         # Create text boxes and labels
         ip=QtGui.QLabel("IP Address")
@@ -101,6 +103,7 @@ class Example(QtGui.QMainWindow):
         grid.addWidget(makeDirectory, 3, 0,1,1)
         grid.addWidget(connectToServer, 2,3,1,1)
         grid.addWidget(disconnectFromServer, 2,4,1,1)
+        grid.addWidget(delete, 3,6,1,1)
 
         # Create file system for server
         self.view = QtGui.QTreeView()
@@ -159,15 +162,14 @@ class Example(QtGui.QMainWindow):
         ip = self.ipAddress.text()
         port = int( self.port.text() )
         self.username = self.name.text()
-        self.password = self.password.text()
+        self.password2 = self.password.text()
 
         self.s.connect((ip, port))
         self.recieve()
-
+        
         self.action('USER '+ self.username)
-        self.action('PASS '+ self.password)
-
-        # self.action('USER '+'group2')
+        self.action('PASS '+ self.password2)
+        #  self.action('USER '+'group2')
         # self.action('PASS '+'ei9keNge')
         self.pathServer = self.getPWDServer()
         self.updateTreeClient()
@@ -259,16 +261,14 @@ class Example(QtGui.QMainWindow):
         return (dirnames, filenames)
 
     def findExtension(self, filename):
-        listOfAscii = ['as','asm','asp','atom','atomcat','c','cc',
-        'cfm','cgi','conf','cpp','css','csv','def','dhtml','dic','dtd','ecma',
-        'es6','es7','f','f77','f90','for','h','hh','hpp','htm','html','java',
-        'jhtml','js','js','json','list','log','m','md','mm','opml','p','pas',
-        'php','phtml','pl','rb','rss','rt','rtf','rtx','ruby','s','sgm','sgml',
-        'sh','shtml','sql','swift','text','tsv','txt','vbs','vcf','vcs','webapp',
-        'wri','xht','xhtml','xml','xsl','xsl','xslt','xspf']
+        listOfAscii = ['as','asm','asp','atom','atomcat','cc','cfm','cgi','conf','cpp','css','csv','def','dhtml','dic','dtd','ecma','es6','es7','f77','f90','for','hh','hpp','htm','html','java','jhtml','js','js','json','list','log','md','mm','opml','pas','php','phtml','pl','rb','rss','rt','rtf','rtx','ruby','sgm','sgml','sh','shtml','sql','swift','text','tsv','txt','vbs','vcf','vcs','webapp','wri','xht','xhtml','xml','xsl','xsl','xslt','xspf']
         filetype, encoding = mimetypes.guess_type(filename)
+        print("filetype is ")
+        print (filetype)
         for i in listOfAscii:
             if i in filetype:
+                print(i)
+                print("sending type a")
                 return 'TYPE A'
         return 'TYPE I'
 
@@ -444,15 +444,44 @@ class Example(QtGui.QMainWindow):
 
 # Create a new directory on the server
     def makeNewDirectory(self):
-        filePath = self.pathServer
-        print("path in makeDirectory: ")
-        print (filePath)
-        if not os.path.isdir(filePath):
-            index=filePath.rfind('/')
-            filePath=filePath[:index]
+        # filePath = self.getPWDServer()
+        # print("path in makeDirectory: ")
+        # print (filePath)
 
-        filePath = filePath + '/' + self.newDir
+        reply = self.action('CWD '+ filePath)
+        time.sleep(.05)
+
+        filePath = self.newDir
+
+        print("path in makeDirectory 2: ")
+        print (filePath)
         self.action('MKD '+filePath)
+
+    def delete(self, answer):
+        print("im here")
+        if answer.text()== 'OK':
+            reply = self.action('CWD '+ self.pathServer)
+            time.sleep(.05)
+            while b'226' in reply:
+                reply=self.recieve()
+
+            if b'250' in reply: # directory
+                mes= "RMD "
+                reply=self.action(mes + self.pathServer)
+
+            elif b'550' in reply: # file
+                mes= "DELE "
+                reply=self.action(mes + self.pathServer)
+
+    # Open modal for the user to insert file name of file to be created
+    def deleteDir(self):      
+        msg = QtGui.QMessageBox()
+        msg.setIcon(QtGui.QMessageBox.Information)
+        msg.setText("Are you sure you wish to delete " + self.pathServer + '?')
+        msg.setWindowTitle("Confirm delete")
+        msg.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+        msg.buttonClicked.connect(self.delete) 
+        retval = msg.exec_()
 
     def getTreePath(self, index):
         path = []
@@ -532,7 +561,7 @@ class Example(QtGui.QMainWindow):
         print(self.pathServer)
         if self.pathServer[0]=='/' and self.pathServer[1]=='/':
             self.pathServer=self.pathServer[1:]
-
+        
         reply = self.action('CWD '+ self.pathServer)
         time.sleep(.05)
         while b'226' in reply:
@@ -547,6 +576,8 @@ class Example(QtGui.QMainWindow):
         elif b'550' in reply:
             indexItem = self.model.index(index.row(), 0, index.parent())
             self.fileNameServer = self.model.itemFromIndex(indexItem).text()
+            print("file name server is: ")
+            print(self.fileNameServer)
             self.filePathServer = self.getTreePathServer(index)
 
     def updateTreeServer(self):
