@@ -261,7 +261,7 @@ class FTPServerProtocol(threading.Thread):
             self.sendResponse('550 CWD failed Directory not exists.\r\n')
             return
 
-        self.working_path = directory_path
+        self.working_directory = directory_path
 
         self.sendResponse('250 CWD Command successful.\r\n')
 
@@ -294,7 +294,7 @@ class FTPServerProtocol(threading.Thread):
 
     def MKD(self, dirname):
         # Creates specified directory at current path directory
-        server_path = self.base_path + self.working_directory + dirname
+        server_path = self.base_path + dirname
         log('MKD', server_path)
 
         if not self.authenticated:
@@ -309,7 +309,7 @@ class FTPServerProtocol(threading.Thread):
     def RMD(self, dirname):
         # Removes specified directory at current path directory
         import shutil
-        server_path = self.base_path + self.working_directory + dirname
+        server_path = self.base_path + dirname
         log('RMD', server_path)
 
         if not self.authenticated:

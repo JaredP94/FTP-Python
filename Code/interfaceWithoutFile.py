@@ -444,14 +444,23 @@ class Example(QtGui.QMainWindow):
 
 # Create a new directory on the server
     def makeNewDirectory(self):
-        # filePath = self.getPWDServer()
-        # print("path in makeDirectory: ")
-        # print (filePath)
+        filePath = self.getPWDServer()
+        print("path in makeDirectory: ")
+        print (filePath)
 
         reply = self.action('CWD '+ filePath)
         time.sleep(.05)
 
-        filePath = self.newDir
+        while b'226' in reply:
+            reply=self.recieve()
+
+        if b'250' in reply: # directory
+            filePath = filePath + '/' + self.newDir
+
+        elif b'550' in reply: # file
+            index=filePath.rfind('/')
+            filePath=filePath[:index]
+            filePath = filePath + '/' + self.newDir
 
         print("path in makeDirectory 2: ")
         print (filePath)
@@ -460,6 +469,11 @@ class Example(QtGui.QMainWindow):
     def delete(self, answer):
         print("im here")
         if answer.text()== 'OK':
+            filePath = self.getPWDServer()
+
+            if self.pathServer[0]=='/' and self.pathServer[1]=='/':
+                self.pathServer=self.pathServer[1:]
+
             reply = self.action('CWD '+ self.pathServer)
             time.sleep(.05)
             while b'226' in reply:
