@@ -60,6 +60,8 @@ class Example(QtGui.QMainWindow):
         disconnectFromServer.clicked.connect(self.disconnect_from_server)
         makeDirectory = QtGui.QPushButton("Create Directory")
         makeDirectory.clicked.connect(self.mkdir)
+        delete = QtGui.QPushButton("Delete")
+        delete.clicked.connect(self.deleteDir)
 
         # Create text boxes and labels
         ip=QtGui.QLabel("IP Address")
@@ -101,6 +103,7 @@ class Example(QtGui.QMainWindow):
         grid.addWidget(makeDirectory, 3, 0,1,1)
         grid.addWidget(connectToServer, 2,3,1,1)
         grid.addWidget(disconnectFromServer, 2,4,1,1)
+        grid.addWidget(delete, 3,6,1,1)
 
         # Create file system for server
         self.view = QtGui.QTreeView()
@@ -159,13 +162,13 @@ class Example(QtGui.QMainWindow):
         ip = self.ipAddress.text()
         port = int( self.port.text() )
         self.username = self.name.text()
-        self.password = self.password.text()
+        self.password2 = self.password.text()
 
         self.s.connect((ip, port))
         self.recieve()
 
         self.action('USER '+ self.username)
-        self.action('PASS '+ self.password)
+        self.action('PASS '+ self.password2)
 
         # self.action('USER '+'group2')
         # self.action('PASS '+'ei9keNge')
@@ -444,15 +447,57 @@ class Example(QtGui.QMainWindow):
 
 # Create a new directory on the server
     def makeNewDirectory(self):
-        filePath = self.pathServer
+        filePath = self.getPWDServer()
         print("path in makeDirectory: ")
         print (filePath)
-        if not os.path.isdir(filePath):
+
+        reply = self.action('CWD '+ filePath)
+        time.sleep(.05)
+        while b'226' in reply:
+            reply=self.recieve()
+
+        if b'250' in reply: # directory
+            filePath = filePath + '/' + self.newDir
+
+        elif b'550' in reply: # file
             index=filePath.rfind('/')
             filePath=filePath[:index]
+            filePath = filePath + '/' + self.newDir
 
-        filePath = filePath + '/' + self.newDir
+        print("path in makeDirectory 2: ")
+        print (filePath)
         self.action('MKD '+filePath)
+
+    def delete(self, answer):
+        print("im here")
+        if answer.text()== 'OK':
+            # filePath = self.getPWDServer()
+
+            # if self.pathServer[0]=='/' and self.pathServer[1]=='/':
+            #     self.pathServer=self.pathServer[1:]
+            
+            reply = self.action('CWD '+ self.pathServer)
+            time.sleep(.05)
+            while b'226' in reply:
+                reply=self.recieve()
+
+            if b'250' in reply: # directory
+                mes= "RMD "
+                reply=self.action(mes + self.pathServer)
+
+            elif b'550' in reply: # file
+                mes= "DELE "
+                reply=self.action(mes + self.pathServer)
+
+    # Open modal for the user to insert file name of file to be created
+    def deleteDir(self):      
+        msg = QtGui.QMessageBox()
+        msg.setIcon(QtGui.QMessageBox.Information)
+        msg.setText("Are you sure you wish to delete " + self.pathServer + '?')
+        msg.setWindowTitle("Confirm delete")
+        msg.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+        msg.buttonClicked.connect(self.delete) 
+        retval = msg.exec_()
 
     def getTreePath(self, index):
         path = []
