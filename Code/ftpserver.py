@@ -26,6 +26,7 @@ class FTPServerProtocol(threading.Thread):
         self.pasv_mode          = False
         self.rest               = False
         self.working_directory  = working_directory
+        self.base_path          = working_directory
         self.command_socket     = command_socket
         self.address            = address
         self.type               = 'A'
@@ -60,6 +61,26 @@ class FTPServerProtocol(threading.Thread):
     def connectionSuccess(self):
         # Provide greeting for accepted user connection
         self.sendResponse('220 Service ready for new user.\r\n')
+
+    def setupUserFolder(self, username):
+        # Separare base access path from working directory
+        path = self.working_directory + '/' + username
+
+        try:
+            os.mkdir(path)
+        except OSError:
+            pass
+
+        path = path.split('/')
+        user_path_index = path.index(username)
+        base_path = path[:user_path_index]
+        working_path = path[user_path_index:]
+        self.base_path = '/'.join(base_path)
+        self.working_directory = '/' + '/'.join(working_path) + '/'
+
+    def generatePath(self, base_path='', working_path=''):
+        print(base_path + working_path)
+        return base_path + working_path
 
     #=======================================#
     ## FTP transmission control procedures ##
@@ -110,6 +131,7 @@ class FTPServerProtocol(threading.Thread):
         else:
             self.sendResponse('331 User name okay, need password.\r\n')
             self.username = username
+            self.setupUserFolder(username)
 
     def PASS(self, password):
         # Lets user to set their password
@@ -199,11 +221,11 @@ class FTPServerProtocol(threading.Thread):
             return
 
         if not directory_path:
-            server_path = os.path.abspath(os.path.join(self.working_directory, '.'))
+            server_path = os.path.abspath(os.path.join(self.base_path + self.working_directory, '.'))
         elif directory_path.startswith(os.path.sep):
             server_path = os.path.abspath(directory_path)
         else:
-            server_path = os.path.abspath(os.path.join(self.working_directory, directory_path))
+            server_path = os.path.abspath(os.path.join(self.base_path, directory_path))
 
         log('LIST', server_path)
 
@@ -232,14 +254,15 @@ class FTPServerProtocol(threading.Thread):
 
     def CWD(self, directory_path):
         # Allows user to change current directory to a new directory on the server
-        server_path = directory_path.endswith(os.path.sep) and directory_path or os.path.join(self.working_directory, directory_path)
+        server_path = self.base_path + directory_path
         log('CWD', server_path)
 
         if not os.path.exists(server_path) or not os.path.isdir(server_path):
             self.sendResponse('550 CWD failed Directory not exists.\r\n')
             return
 
-        self.working_directory = server_path
+        self.working_path = directory_path
+
         self.sendResponse('250 CWD Command successful.\r\n')
 
     def PWD(self, client_command):
@@ -249,13 +272,14 @@ class FTPServerProtocol(threading.Thread):
 
     def CDUP(self, client_command):
         # Changes current working directory to parent directory
-        self.working_directory = os.path.abspath(os.path.join(self.working_directory, '..'))
+        if self.working_directory != '/':
+            self.working_directory = '/' + os.path.abspath(os.path.join(self.base_path + self.working_directory, '..'))
         log('CDUP', self.working_directory)
         self.sendResponse('200 OK.\r\n')
 
     def DELE(self, filename):
         # Deletes file specified in the pathname to be deleted at the server site
-        server_path = filename.endswith(os.path.sep) and filename or os.path.join(self.working_directory, filename)
+        server_path = self.base_path + filename
         log('DELE', server_path)
 
         if not self.authenticated:
@@ -270,7 +294,7 @@ class FTPServerProtocol(threading.Thread):
 
     def MKD(self, dirname):
         # Creates specified directory at current path directory
-        server_path = dirname.endswith(os.path.sep) and dirname or os.path.join(self.working_directory, dirname)
+        server_path = self.base_path + self.working_directory + dirname
         log('MKD', server_path)
 
         if not self.authenticated:
@@ -285,7 +309,7 @@ class FTPServerProtocol(threading.Thread):
     def RMD(self, dirname):
         # Removes specified directory at current path directory
         import shutil
-        server_path = dirname.endswith(os.path.sep) and dirname or os.path.join(self.working_directory, dirname)
+        server_path = self.base_path + self.working_directory + dirname
         log('RMD', server_path)
 
         if not self.authenticated:
@@ -300,7 +324,7 @@ class FTPServerProtocol(threading.Thread):
 
     def RNFR(self, filename):
         # Specifies the old pathname of the file which is to be renamed
-        server_path = filename.endswith(os.path.sep) and filename or os.path.join(self.working_directory, filename)
+        server_path = self.base_path + self.working_directory + filename
         log('RNFR', server_path)
 
         if not os.path.exists(server_path):
@@ -310,7 +334,7 @@ class FTPServerProtocol(threading.Thread):
 
     def RNTO(self, filename):
         # Specifies the new pathname of the file specified in the immediately preceding "rename from" command
-        server_path = filename.endswith(os.path.sep) and filename or os.path.join(self.working_directory, filename)
+        server_path = self.base_path + self.working_directory + filename
         log('RNTO', server_path)
 
         if not os.path.exists(os.path.sep):
@@ -330,7 +354,7 @@ class FTPServerProtocol(threading.Thread):
 
     def RETR(self, filename):
         # Causes server-DTP to transfer a copy of the file, specified in the pathname, to the server- or user-DTP at the other end of the data connection
-        server_path = os.path.join(self.working_directory, filename)
+        server_path = os.path.join(self.base_path + self.working_directory, filename)
         log('RETR', server_path)
 
         if not os.path.exists(server_path):
@@ -367,7 +391,7 @@ class FTPServerProtocol(threading.Thread):
             self.sendResponse('530 STOR failed User not logged in.\r\n')
             return
 
-        server_path = os.path.join(self.working_directory, filename)
+        server_path = os.path.join(self.base_path + self.working_directory, filename)
         log('STOR', server_path)
 
         try:
@@ -403,7 +427,7 @@ class FTPServerProtocol(threading.Thread):
             self.sendResponse('530 APPE failed User not logged in.\r\n')
             return
 
-        server_path = filename.endswith(os.path.sep) and filename or os.path.join(self.working_directory, filename)
+        server_path = filename.endswith(os.path.sep) and filename or os.path.join(self.base_path + self.working_directory, filename)
         log('APPE', server_path)
         self.sendResponse('150 Opening data connection.\r\n')
         self.createDataSocket()
