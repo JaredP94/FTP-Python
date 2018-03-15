@@ -326,7 +326,8 @@ class Example(QtGui.QMainWindow):
         newip, newport = self.pasv()
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
-        self.send('STOR ' + self.fileName)
+        filePathServer = self.getPWDServer() + '/' + self.fileName
+        self.send('STOR ' + filePathServer)
         f = open(self.filePath, 'rb')
         size = os.stat(self.filePath)[6]
         opened = True
@@ -364,7 +365,8 @@ class Example(QtGui.QMainWindow):
         newip, newport = self.pasv()
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         p.connect((newip, newport))
-        self.action('RETR '+file)
+        filePathServer = self.getPWDServer() + '/' + file
+        self.action('RETR '+filePathServer)
         filePath = "/" + self.filePath
         if not os.path.isdir(filePath):
             index=filePath.rfind('/')
