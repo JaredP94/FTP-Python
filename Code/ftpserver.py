@@ -331,6 +331,7 @@ class FTPServerProtocol(threading.Thread):
             self.sendResponse('550 RNFR failed File or Directory %s not exists.\r\n' % server_path)
         else:
             self.rnfr = server_path
+            self.sendResponse('350 RNFR successful - awaiting RNTO')
 
     def RNTO(self, filename):
         # Specifies the new pathname of the file specified in the immediately preceding "rename from" command
@@ -342,6 +343,7 @@ class FTPServerProtocol(threading.Thread):
         else:
             try:
                 os.rename(self.rnfr, server_path)
+                self.sendResponse('250 RNTO successful')
             except OSError as error:
                 log('RNTO', error)
 
