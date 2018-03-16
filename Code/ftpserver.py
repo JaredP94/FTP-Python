@@ -272,7 +272,7 @@ class FTPServerProtocol(threading.Thread):
 
     def CDUP(self, client_command):
         # Changes current working directory to parent directory
-        if self.working_directory != '/':
+        if self.working_directory != '/' + self.username:
             self.working_directory = '/' + os.path.abspath(os.path.join(self.base_path + self.working_directory, '..'))
         log('CDUP', self.working_directory)
         self.sendResponse('200 OK.\r\n')
