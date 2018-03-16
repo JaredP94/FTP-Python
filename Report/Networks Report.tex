@@ -1,0 +1,130 @@
+\documentclass[10pt,twocolumn]{witseiepaper}
+
+%
+% All KJN's macros and goodies (some shameless borrowing from SPL)
+\usepackage{KJN}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{epstopdf}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{listings}
+\usepackage{alltt}
+\usepackage{matlab-prettifier}
+\usepackage{graphicx}
+\usepackage{changes}
+\usepackage{makecell}
+\usepackage{verbatim}
+\usepackage{algorithm,algpseudocode}
+\usepackage{balance}
+\usepackage{pdfpages}
+\usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+%\usepackage{flafter}
+
+\lstset{language=Matlab, % Set colour for matlab code
+	breaklines=true,%
+	morekeywords={matlab2tikz},
+	keywordstyle=\color{blue},%
+	morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},
+	identifierstyle=\color{black},%
+	stringstyle=\color{mylilas},
+	commentstyle=\color{mygreen},%
+	showstringspaces=false,%without this there will be a symbol in the places where there is a space
+	numbers=left,%
+	numberstyle={\tiny \color{black}},% size of the numbers
+	numbersep=9pt, % this defines how far the numbers are from the text
+	emph=[1]{for,end,break},emphstyle=[1]\color{red}, %some words to emphasise
+	%emph=[2]{word1,word2}, emphstyle=[2]{style},    
+}
+
+
+%
+% PDF Info
+%
+\ifpdf
+\pdfinfo{
+/Title (FILE TRANSFER APPLICATION)
+/Author (KJ Butkow, Jared Ping)
+/CreationDate (D:201803151731)
+/ModDate (D:200510121530)
+/Subject (FILE TRANSFER APPLICATION)
+/Keywords ()
+}
+\fi
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+
+\title{FILE TRANSFER APPLICATION}
+
+\author{Kayla-Jade Butkow (714227) and Jared Ping (704447) \\ ELEN4017 Project Report
+\thanks{School of Electrical \& Information Engineering, University of the
+Witwatersrand, Private Bag 3, 2050, Johannesburg, South Africa}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+\abstract{}
+
+\keywords{}
+
+\maketitle
+\thispagestyle{empty}\pagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+\section{INTRODUCTION}
+The File Transfer Protocol (FTP) is essential in the implementation of a File Transfer Application. The file transfer protocol allows for the transfer of files between two end systems \cite{kurose}.
+
+\section{SYSTEM OVERVIEW}
+\subsection{FTP Server}
+
+\subsection{FTP Client}
+
+\section{COMMANDS AND REPLY CODES}
+
+\section{IMPLEMENTATION DETAILS}
+
+\section{DIVISION OF WORK}
+
+\section{RESULTS}
+
+\section{CRITICAL ANALYSIS}
+
+\section{CODE STRUCTURE}
+NOTE: Ask Asad what is meant to go here!
+
+\section{CONCLUSION} \label{sec:conclusion}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%\nocite{*}
+\balance
+\bibliographystyle{witseie}
+\bibliography{project}
+
+%{\tiny \vfill \hfill \today \hspace{5mm} witseie-paper-2003.\TeX}
+
+\newpage
+\setcounter{figure}{0} 
+\renewcommand{\thefigure}
+{A\arabic{figure}}
+\onecolumn
+\begin{appendix} \label{sec:appendix}
+		
+
+\end{appendix}
+
+\end{document}
+
+" vim: ts=4
+" vim: tw=78
+" vim: autoindent
+" vim: shiftwidth=4
