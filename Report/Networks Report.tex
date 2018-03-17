@@ -74,7 +74,7 @@ Witwatersrand, Private Bag 3, 2050, Johannesburg, South Africa}
 %
 \abstract{}
 
-\keywords{}
+\keywords{client, file transfer protocol, server}
 
 \maketitle
 \thispagestyle{empty}
@@ -84,7 +84,7 @@ Witwatersrand, Private Bag 3, 2050, Johannesburg, South Africa}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 \section{INTRODUCTION}
-The File Transfer Protocol (FTP) is essential in the implementation of a File Transfer Application. The file transfer protocol allows for the transfer of files between two end systems \cite{kurose}.
+The File Transfer Protocol (FTP) is essential in the implementation of a File Transfer Application. The File Transfer Protocol allows for the transfer of files between two end systems \cite{kurose}. The FTP protocol runs on top of TCP and, uniquely, makes use of two TCP connections: a control connection and a data connection \cite{kurose}. The data connection is non-persistent, and is created when the transfer of data is required \cite{kurose}. A File Transfer Application consists of an FTP server and an FTP client. This report presents the design, implementation and testing of a File Transfer Application, including an overview of the system, details of the implemented code, results and a critical analysis of the system. The division of labour between group members is also discussed.
 
 \section{SYSTEM OVERVIEW}
 \subsection{FTP Server}
@@ -144,7 +144,6 @@ The user is able to delete a file or folder on the remote system. They do so by 
 \subsubsection*{Differentiating between files and folders:}
 In many instances in the client, it is necessary to differentiate between a folder and a file on the server. Once such example of this is in deciding whether a \texttt{DELE} or \texttt{RMD} command should be sent, as described above. In order to differentiate, the response codes of the \texttt{CWD} command are used. If the response to a \texttt{CWD} command has a \texttt{550} code, it implies that the path points to a file and not a folder. If the response has a \texttt{250}, the path points to a folder. Thus, this method is used as a differentiator wherever one is needed.
 
-
 \subsubsection*{GUI:}
 The client was implemented as a GUI using the PyQt4 module. The GUI provided a simple user interface consisting of push buttons that allow the user to perform functions such as uploading and downloading files, and two file systems. The file systems of the server and client were created by taking the current path and creating a directory item for each of the directories in the path. The final directory is then populated with the folders and files contained in it. For the server file system, this information was obtained using the \texttt{PWD} and \texttt{LIST} commands. For the client file system, the information was obtained using the \texttt{walk} method of the \texttt{os} module. In order to change directories in the remote file system, a \texttt{CWD} command is sent along with the path to the directory of interest.
 
@@ -180,10 +179,13 @@ A limitation of the server is that it does not have the functionality to impleme
 
 Since the append command is never sent by the client, if the user tries to upload a file with a name that already exists in the current directory, the preexisting file will be overwritten. This could result in the accidental loss of the user's data. Another limitation lies within the file systems in the client GUI. After a file or directory has been modified, it does not update automatically. It needs to be reselected in order for the modifications to be loaded.
 
+\subsection{Future Development}
+For future development, the server should be enhanced to handle different file types and transmission modes. The client should implement an automatic refresh every time a file or folder is modified. Furthermore, the functionality of the client should be enhance to cater for more FTP commands.
+
 \section{CODE STRUCTURE}
 
 \section{CONCLUSION} \label{sec:conclusion}
-
+The design, implementation and testing of a File Transfer Application was presented. The system was deemed to be a success since it met all of the basic requirements, and also implemented many additional features. Through the use of Wireshark, it is clear that the system implemented all of the required FTP reply codes and that the codes and responses are sent in the correct order. For future development, more FTP commands should be implemented in order to develop a complete File Transfer Application.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
