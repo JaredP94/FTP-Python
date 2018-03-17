@@ -149,6 +149,7 @@ In many instances in the client, it is necessary to differentiate between a fold
 The client was implemented as a GUI using the PyQt4 module. The GUI provided a simple user interface consisting of push buttons that allow the user to perform functions such as uploading and downloading files, and two file systems. The file systems of the server and client were created by taking the current path and creating a directory item for each of the directories in the path. The final directory is then populated with the folders and files contained in it. For the server file system, this information was obtained using the \texttt{PWD} and \texttt{LIST} commands. For the client file system, the information was obtained using the \texttt{walk} method of the \texttt{os} module. In order to change directories in the remote file system, a \texttt{CWD} command is sent along with the path to the directory of interest.
 
 \section{DIVISION OF WORK}
+Since the FTP server has two clear parts, the server and the client, the work was divided accordingly. Jared Ping wrote all of the code for the server, as well as the sections in the report pertaining to the server. Kayla-Jade Butkow wrote the code for the client, as the sections of the report related to the client. Kayla-Jade also wrote the section pertaining to the commands and reply codes and the introduction, while Jared detailed the structure of the code and wrote the conclusion. The critical analysis and results sections and the abstract were written by the partners together.
 
 \section{RESULTS}
 
@@ -156,7 +157,7 @@ The client was implemented as a GUI using the PyQt4 module. The GUI provided a s
 An analysis of the successes and limitations of the implemented system is given below.
 
 \subsection{Successes}
-The system is a fully functional, stable and well implemented solution. It fulfills all of the requirements for a file transfer application:
+The system is a fully functional, stable and well implemented solution. It fulfills all of the requirements for a file transfer application, namely:
 \begin{itemize}
 	\item A client and a server that are able to meet all of the requirements of a minimal FTP implementation, as defined by \cite{rfc}, including server reply messages and error handling
 	\item A client with a simple user interface and that is able to interact with a standard FTP server
@@ -174,6 +175,8 @@ Furthermore, both the server and the client implement features beyond those ment
 
 \subsection{Limitations}
 The largest limitation of the implemented system is that the client only functions correctly on Mac OS X operating systems. This is a limitation as it reduces the number of people who are able to use the developed client.
+
+A limitation of the server is that it does not have the functionality to implement a file structure other than file, nor a data transmission mode other than stream. The implications of this is that a standard FTP client will be required to use the default mode and structure, which may limit the functionality of the client.
 
 Since the append command is never sent by the client, if the user tries to upload a file with a name that already exists in the current directory, the preexisting file will be overwritten. This could result in the accidental loss of the user's data. Another limitation lies within the file systems in the client GUI. After a file or directory has been modified, it does not update automatically. It needs to be reselected in order for the modifications to be loaded.
 
