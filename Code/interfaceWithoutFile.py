@@ -263,18 +263,12 @@ class Example(QtGui.QMainWindow):
     def findExtension(self, filename):
         listOfAscii = ['as','asm','asp','atom','atomcat','cc','cfm','cgi','conf','cpp','css','csv','def','dhtml','dic','dtd','ecma','es6','es7','f77','f90','for','hh','hpp','htm','html','java','jhtml','js','js','json','list','log','md','mm','opml','pas','php','phtml','pl','rb','rss','rt','rtf','rtx','ruby','sgm','sgml','sh','shtml','sql','swift','text','tsv','txt','vbs','vcf','vcs','webapp','wri','xht','xhtml','xml','xsl','xsl','xslt','xspf']
         filetype, encoding = mimetypes.guess_type(filename)
-        print("filetype is ")
-        print (filetype)
         for i in listOfAscii:
             if i in filetype:
-                print(i)
-                print("sending type a")
                 return 'TYPE A'
         return 'TYPE I'
 
     def defineDownloadType(self):
-        print ("Filepathserver: ")
-        print(self.filePathServer)
         mes= self.findExtension(self.fileNameServer)
         reply= self.send(mes)
         while True:
@@ -355,8 +349,6 @@ class Example(QtGui.QMainWindow):
             else:
                 piece = f.read(buff) 
             p.send(piece)
-                
-            f.seek(pos)
 
         f.close()
         self.recieve() 

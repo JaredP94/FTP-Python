@@ -19,6 +19,8 @@
 \usepackage{algorithm,algpseudocode}
 \usepackage{balance}
 \usepackage{pdfpages}
+\usepackage{tikz} % for drawing stuff
+\usetikzlibrary{positioning} % for relative coordinates
 \usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
 \definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
 \definecolor{mylilas}{RGB}{170,55,241}
@@ -39,7 +41,8 @@
 	emph=[1]{for,end,break},emphstyle=[1]\color{red}, %some words to emphasise
 	%emph=[2]{word1,word2}, emphstyle=[2]{style},    
 }
-
+\usepackage{lmodern}
+\newcommand*{\escape}[1]{\texttt{\textbackslash#1}}
 
 %
 % PDF Info
@@ -91,9 +94,9 @@ The FTP client runs from the user's local host and allows the user to interact w
 
 The client allows the user to specify the FTP server address that they wish to connect to, as well as the port that the server is running on. The user is also able to input their username and password for the FTP server they are connecting to.
 
-Once the user has successfully connected to the FTP server, they are able to view their local file system as well as the remote file system within the client GUI. The user is also able to navigate both file systems. Once the required file is found, the user is able to upload the file to the remote server from the local file system, or download the file from the remote system to the local storage. When uploading a file, the file is saved to the currently selected directory on the server. If a directory has not been selected by the user, the file is saved to the home directory of the user's remote repository. Likewise, when the user is downloading a file, the file is saved to the current local folder, or if none is selected, to the user's home directory. On Mac OS X operating systems, this home directory is found at \textit{/Users/Username}.
+Once the user has successfully connected to the FTP server, they are able to view their local file system as well as the remote file system within the client GUI. The user is also able to navigate both file systems. Once the required file is found, the user is able to upload the file to the remote server from the local file system, or download the file from the remote system to the local storage. When uploading a file, the file is saved to the currently selected directory on the server. If a directory has not been selected by the user, the file is saved to the home directory of the user's remote repository. Likewise, when the user is downloading a file, the file is saved to the current local folder, or if none is selected, to the user's home directory. On Mac OS X operating systems, this home directory is found at \textit{/Users/Username}. If a file is selected rather than a directory, the downloaded file is saved in the directory in which the selected file is found.
 
-The user also has the ability to delete files or folders, as well as to recursively remove a folder and all of its contents.
+The user also has the ability to delete files or folders, as well as to recursively remove a folder and all of its contents. Finally, the user is able to create a folder on the server in the base directory of their choosing. If a file is selected rather than a base directory, the new directory is saved in the directory containing the selected file.
 
 Once the client has finished using the FTP connection, they can disconnect from the server and connect to another server if they wish to.
 
@@ -105,12 +108,44 @@ The feature to change the file structure from file to record or page was not imp
 \section{COMMANDS AND REPLY CODES}
 
 \section{IMPLEMENTATION DETAILS}
-The server and the client were both implemented using Python 3. On both systems, all communication sockets are created using the Python \texttt{socket} module. Interfacing with the operating system is performed using the \texttt{os} module. This module allows for the traversing of paths in the operating system, as well as for saving and opening files.
+The server and the client were both implemented using Python 3. On both systems, all communication sockets are created using the Python \texttt{socket} module \cite{socket}. The sending and receiving of messages are also performed using methods from this module. Interfacing with the operating system is performed using the \texttt{os} module \cite{os}. This module allows for the traversing of paths in the operating system, as well as for saving and opening files \cite{os}.
 
 \subsection{Server}
 
 \subsection{Client}
-In order to connect to the server, once the user has supplied the server address and port, a TCP connection is created between the server and the client. This TCP connection acts as a control connection to transfer FTP commands and replies between the client and the server \cite{kurose}. The user's username and password are then transferred over the control connection to authenticate the user on the server.
+In order to connect to the server, once the user has supplied the server address and port, a TCP connection is created between the server and the client. This TCP connection acts as a control connection to transfer FTP commands and replies between the client and the server \cite{kurose}. When sending FTP commands to the server, the messages are formatted using the format in \figref{fig:commandformat}. In the figure, SP indicates a space and CRLF is the end of line sequence (\escape{r}\escape{n}). A \texttt{send()} function was created which takes in a string containing the FTP command, a space and the arguments. The end of line sequence is then appended to the string and the resulting string is transmitted to the server. The use of this function ensures that all messages sent to the server have the correct format. Once any control message has been sent to the server, the client receives the response, and decodes it into a string in the \texttt{receive()} function. To allow the user to see the responses from the server, all received responses are printed onto the GUI. In order to ensure that the \texttt{receive()} function is called after every message is sent, an \texttt{action()} function was created which calls the \texttt{send()} function and then the \texttt{receive()} function. 
+
+\begin{figure}[h]
+	\centering
+	\begin{tikzpicture}
+	\draw 
+	(0,0) rectangle (2,-0.5) node[pos=.5] {Command}
+	(2,0) rectangle (3, -0.5) node[pos=.5] {SP}
+	(3,0) rectangle (5.6,-0.5) node[pos=.5] {Arguments}
+	(5.6, 0) rectangle (7,-0.5) node[pos=.5] {CRLF}
+	;
+	\end{tikzpicture}
+	\caption{FTP Command Format}
+	\label{fig:commandformat}
+\end{figure}
+
+Before uploading or downloading a file, the client sends a \texttt{PASV} command, which requests that the server creates a new data port and listens on that port for a connection from the client \cite{rfc}. As a response to the command, the server sends the client the IP address and port number of the new socket. The port number, which is a 16 bit number, is sent to the client as two eight bit numbers  \cite{rfc}. The port is therefore calculated by multiplying the first number (the most significant byte) by 256 and adding the result to the second number \cite{rfc}. Thereafter, the client connects to the port so that data can be transferred.
+
+\subsubsection*{Uploading files:}
+In order to upload a file, it is necessary to inform the server of whether an ASCII or binary file (image type) is being transmitted, so that the correct encoding can be used. In order to determine the type of the file to be uploaded, the \texttt{magic} module is used. The module determines the type of a file by classifying the file's headers \cite{magic}. If the type is found to be text, \texttt{TYPE A} is sent to the server. Otherwise, \texttt{TYPE I} is transmitted. Thereafter, a \texttt{STOR} command is sent to the server along with the full path of the file to be uploaded. Thereafter, the file is uploaded to the server. During the upload process, the file is divided up into chunks and each chunk transmitted to the server. A flow chart detailing the upload process is given in \figref{fig:upload}.
+
+\subsubsection*{Downloading files:}
+When downloading files, it is again necessary to specify the file type. Since the files lie on the server, the \texttt{magic} module could not be used to determine the file type. Rather, the file type was deduced from the file extension, using the \texttt{mimetypes} module. This file type is then compared to a list of ASCII file types, and if the file type is found in the list, \texttt{TYPE A} is sent to the server. Otherwise, \texttt{TYPE I} is transmitted. Once the file type has been sent, a \texttt{RETR} command is sent along with the full path of the file to be downloaded. A new file with the filename of the file to be downloaded is then opened. Chunks of data are received by the client and then written to the open file. Once no more data is received, the file is closed and the download is completed.
+
+\subsubsection*{Deleting folders and files and making folders:}
+The user is able to delete a file or folder on the remote system. They do so by selecting the file or folder and then pressing the \textit{Delete} button. The client then uses the method described below to determine whether the user is trying to delete a file or a folder. If a file is to be deleted, the \texttt{DELE} command is sent to the server. Likewise, for a folder, the \texttt{RMD} command is sent. Both of these commands are followed by the full path to the item to be deleted. The user is also able to create a folder by pressing the \textit{Create Directory} button. The pressing of this button prompts the user to input the name of the new folder. This folder is created using the \texttt{MKD} command, which is sent along with the path to the new directory.
+
+\subsubsection*{Differentiating between files and folders:}
+In many instances in the client, it is necessary to differentiate between a folder and a file on the server. Once such example of this is in deciding whether a \texttt{DELE} or \texttt{RMD} command should be sent, as described above. In order to differentiate, the response codes of the \texttt{CWD} command are used. If the response to a \texttt{CWD} command has a \texttt{550} code, it implies that the path points to a file and not a folder. If the response has a \texttt{250}, the path points to a folder. Thus, this method is used as a differentiator wherever one is needed.
+
+
+\subsubsection*{GUI:}
+The client was implemented as a GUI using the PyQt4 module. The GUI provided a simple user interface consisting of push buttons that allow the user to perform functions such as uploading and downloading files, and two file systems. The file systems of the server and client were created by taking the current path and creating a directory item for each of the directories in the path. The final directory is then populated with the folders and files contained in it. For the server file system, this information was obtained using the \texttt{PWD} and \texttt{LIST} commands. For the client file system, the information was obtained using the \texttt{walk} method of the \texttt{os} module. In order to change directories in the remote file system, a \texttt{CWD} command is sent along with the path to the directory of interest.
 
 \section{DIVISION OF WORK}
 
@@ -122,7 +157,7 @@ In order to connect to the server, once the user has supplied the server address
 \subsection{Client}
 
 \subsubsection*{Limitations:}
-Since the append command is never sent from the client, if the user tries to upload a file with a name that already exists in the current directory, the preexisting file will be overwritten. This could result in the accidental loss of the user's data.
+Since the append command is never sent from the client, if the user tries to upload a file with a name that already exists in the current directory, the preexisting file will be overwritten. This could result in the accidental loss of the user's data. Another limitation lies within the file systems in the client GUI. After a file or directory has been modified, it does not update automatically. It needs to be reselected in order for the modifications to be loaded.
 
 \section{CODE STRUCTURE}
 
@@ -145,6 +180,15 @@ Since the append command is never sent from the client, if the user tries to upl
 \onecolumn
 \begin{appendix} \label{sec:appendix}
 		
+\section{Client Algorithms}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.6\textwidth]{uploadfile.pdf}
+	\caption{Flow chart depicting the process of uploading a file to the server}
+	\raggedright
+	\label{fig:upload}	
+\end{figure}
 
 \end{appendix}
 
