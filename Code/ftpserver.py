@@ -249,8 +249,37 @@ class FTPServerProtocol(threading.Thread):
             self.sendResponse('226 List done.\r\n')
 
     def NLST(self, directory_path):
-        # Sends a directory listing from server to user site
-        self.LIST(directory_path)
+        # Sends a directory listing from server to user site with only names of content
+        if not self.authenticated:
+            self.sendResponse('530 User not logged in.\r\n')
+            return
+
+        if not directory_path:
+            server_path = os.path.abspath(os.path.join(self.base_path + self.working_directory, '.'))
+        elif directory_path.startswith(os.path.sep):
+            server_path = os.path.abspath(directory_path)
+        else:
+            server_path = os.path.abspath(os.path.join(self.base_path + self.working_directory, '.'))
+
+        log('NLST', directory_path)
+        
+        if not self.authenticated:
+            self.sendResponse('530 User not logged in.\r\n')
+        elif not os.path.exists(server_path):
+            self.sendResponse('550 NLST failed Path name doesnt exist.\r\n')
+        else:
+            self.sendResponse('150 Here is listing.\r\n')
+            self.createDataSocket()
+
+            if not os.path.isdir(server_path):
+                fileMessage = fileProperty(server_path)
+                self.data_socket.sock(fileMessage+'\r\n')
+            else:
+                for file in os.listdir(server_path):
+                    self.sendData(file+'\r\n')
+
+            self.terminateDataSocket()
+            self.sendResponse('226 List done.\r\n')
 
     def CWD(self, directory_path):
         # Allows user to change current directory to a new directory on the server
