@@ -309,7 +309,7 @@ PORT	& The argument specifies the data port to be used in the data connection & 
 	\hline 
 LIST & Returns a list of the contents of a directory. The argument is used to specify the path in which the contents should be returned. If an argument is not provided, a list of the contents of the current working directory is supplied &\makecell[l]{530 User not logged in. \\550 LIST failed Path name not exists. \\150 Here is listing. \\226 List done.}\\ 
 	\hline 
-NLST & Calls the LIST command & \makecell[l]{530 User not logged in. \\550 LIST failed Path name not exists. \\150 Here is listing. \\226 List done.} \\ 
+NLST & Calls the LIST command & \makecell[l]{530 User not logged in. \\550 NLST failed Path name not exists. \\150 Here is listing. \\226 List done.} \\ 
 	\hline 
 CWD	& Changes the working directory of the server. The argument is used to specify the new working directory.  & \makecell[l]{550 CWD failed. Directory does not exist. \\250 CWD Command successful.} \\ 
 	\hline 
