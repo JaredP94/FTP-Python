@@ -108,19 +108,19 @@ The feature to change the file structure from file to record or page was not imp
 ** Rename from and to if not implemented
 
 \section{COMMANDS AND REPLY CODES}
-There are five groups of reply codes determined by the first digit of the three digit code \cite{rfc}.
+There are five groups of reply codes determined by the first digit of the three digit code \cite{rfc}. These groups indicate whether the response is positive or negative and allow the client to make an informed decision as to its course of action.
 
 The groups are as follows:
 \begin{tabbing}
 	\hspace{4em}\=\kill
-1yz	\> Positive Preliminary Reply \\ 
-2yz	\> Positive Completion Reply\\ 
-3yz	\> Positive Intermediate reply \\ 
-4yz	\> Transient Negative Completion reply \\ 
-5yz	\> Permanent Negative Completion reply
+1xx	\> Positive Preliminary Reply \\ 
+2xx	\> Positive Completion Reply\\ 
+3xx	\> Positive Intermediate reply \\ 
+4xx	\> Transient Negative Completion reply \\ 
+5xx	\> Permanent Negative Completion reply
 \end{tabbing} 
 
-At least one reply code from each group has been implemented. A list of the implemented commands and the reply codes is given in Table .
+At least one reply code from each group has been implemented. A list of the implemented commands and the reply codes is given in \tabref{tab:commands}. The table also contains a brief description of the purpose of each command.
 
 \section{IMPLEMENTATION DETAILS}
 The server and the client were both implemented using Python 3. On both systems, all communication sockets are created using the Python \texttt{socket} module \cite{socket}. The sending and receiving of messages are also performed using methods from this module. Interfacing with the operating system is performed using the \texttt{os} module \cite{os}. This module allows for the traversing of paths in the operating system, as well as for saving and opening files \cite{os}.
@@ -165,6 +165,18 @@ The client was implemented as a GUI using the PyQt4 module. The GUI provided a s
 Since the FTP server has two clear parts, the server and the client, the work was divided accordingly. Jared Ping wrote all of the code for the server, as well as the sections in the report pertaining to the server. Kayla-Jade Butkow wrote the code for the client, as the sections of the report related to the client. Kayla-Jade also wrote the section pertaining to the commands and reply codes and the introduction, while Jared detailed the structure of the code and wrote the conclusion. The critical analysis and results sections and the abstract were written by the partners together.
 
 \section{RESULTS}
+In order to test the system, it was necessary to test all of the implemented functionality on both the server and the client, as well as to test the interaction between the server and a standard FTP client, and between the client and a standard FTP server. This functionality was tested by performing actions on the various clients and then viewing the messages sent and responses receiving using Wireshark.
+
+\subsection{Interaction between the implemented FTP server and client}
+\figref{fig:gui} presented an image of the client interacting with the implemented server. From the image, it is clear that there is a unique repository for the user, and that the user is unable to navigate to other user's repositories.
+
+
+\subsection{Interaction between a standard FTP server and the implemented client}
+In testing this interaction, it was necessary to ensure that the created client and the standard server were compatible and that all of the functionality implemented in the client functioned correctly when paired with a standard server.
+
+The most important functionality to be tested is the ability to log into the server, navigate through the remote file system and upload and download files. Furthermore, the ability to create a directory, delete files and directories and to log out of the server were also tested. Wireshark screenshots indicating this functionality is given in \secref{sec:ourClientWitsServer}. From the images in \secref{sec:ourClientWitsServer}, it is evident that all features function as expected when paired with a standard FTP server.
+
+\subsection{Interaction between the implemented FTP server and a standard FTP client}
 
 \section{CRITICAL ANALYSIS}
 An analysis of the successes and limitations of the implemented system is given below.
@@ -172,7 +184,7 @@ An analysis of the successes and limitations of the implemented system is given 
 \subsection{Successes}
 The system is a fully functional, stable and well implemented solution. It fulfills all of the requirements for a file transfer application, namely:
 \begin{itemize}
-	\item A client and a server that are able to meet all of the requirements of a minimal FTP implementation, as defined by \cite{rfc}, including server reply messages and error handling
+	\item A client and a server that are able to meet all of the requirements of a minimal FTP implementation, as defined in \cite{rfc}, including server reply messages and error handling
 	\item A client with a simple user interface and that is able to interact with a standard FTP server
 	\item A server that maintains repositories for different users and that is able to interact with a standard FTP client
 	\item A server that can handle multiple clients simultaneously using multi-threading
@@ -184,7 +196,9 @@ The system is a fully functional, stable and well implemented solution. It fulfi
 
 The system also performs all of these actions without the use of any high-level FTP libraries. 
 
-Furthermore, both the server and the client implement features beyond those mentioned in the minimum FTP implementation, which is regarded as a large success of the system. It was stipulated that five reply code should be implemented, however on account of the large number of features implemented, 38 reply code were implemented. This allows for a more informative and complete system, and is also seen as a success.
+Furthermore, both the server and the client implement features beyond those mentioned in the minimum FTP implementation, which is regarded as a large success of the system. It was stipulated that five reply code should be implemented, however on account of the large number of features implemented, many reply code were implemented (as indicated in \tabref{tab:commands}). This allows for a more informative and complete system, and is also seen as a success.
+
+Another large success of the project is aspect of multi-threading within the server. Not only is the server able to maintain control connections with multiple clients simultaneously, it is also able to handle multiple simultaneous upload and download processes. This enhances the user friendliness of the system, as multiple users can use it at the same time without their processes being affected.
 
 \subsection{Limitations}
 The largest limitation of the implemented system is that the client only functions correctly on Mac OS X operating systems. This is a limitation as it reduces the number of people who are able to use the developed client.
@@ -291,8 +305,103 @@ HELP	& Displays help information &  \\
 QUIT	& Terminates the control connection between the user and the server &  221 Goodbye.\\ 
 	\hline 
 
-\end{longtable} 
+\end{longtable}
+\setcounter{figure}{0} 
+\renewcommand{\thefigure}
+{C\arabic{figure}}
+\section{Results}
 
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{gui.png}
+	\caption{GUI client interacting with the implemented FTP server}
+	\raggedright
+	\label{fig:gui}	
+\end{figure}
+
+\subsection{Interaction between a standard FTP server and the implemented client} \label{sec:ourClientWitsServer}
+
+Wireshark screenshots depicting the interaction between the created client and the standard FTP server are given in this section.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{loginWits.png}
+	\caption{FTP commands and replies when logging in}
+	\raggedright
+	\label{fig:loginWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{navigateWits.png}
+	\caption{FTP commands and replies when navigating the remote file system}
+	\raggedright
+	\label{fig:navigateWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{textUploadWits.png}
+	\caption{FTP commands and replies when uploading an ASCII type file}
+	\raggedright
+	\label{fig:textUploadWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{binaryUploadWits.png}
+	\caption{FTP commands and replies when uploading an image type file}
+	\raggedright
+	\label{fig:binaryUploadWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{downloadTextWits.png}
+	\caption{FTP commands and replies when downloading an ASCII type file}
+	\raggedright
+	\label{fig:textDownloadWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{downloadImageWits.png}
+	\caption{FTP commands and replies when downloading an image type file}
+	\raggedright
+	\label{fig:binaryDownloadWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{makeDirectoryWits.png}
+	\caption{FTP commands and replies when creating a directory}
+	\raggedright
+	\label{fig:makeDirectoryWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{deleteDirWits.png}
+	\caption{FTP commands and replies when deleting a directory}
+	\raggedright
+	\label{fig:deleteDirWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{deleteFileWits.png}
+	\caption{FTP commands and replies when deleting a file}
+	\raggedright
+	\label{fig:deleteFileWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{logoutWits.png}
+	\caption{FTP commands and replies when logging out from the server}
+	\raggedright
+	\label{fig:logoutWits}	
+\end{figure}
 
 \end{appendix}
 
