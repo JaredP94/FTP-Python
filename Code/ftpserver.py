@@ -177,11 +177,11 @@ class FTPServerProtocol(threading.Thread):
         log('MODE', mode)
         self.mode = mode
 
-        if self.type == 'S':
+        if self.mode == 'S':
             self.sendResponse('200 Stream transfer mode.\r\n')
-        elif self.type == 'B':
+        elif self.mode == 'B':
             self.sendResponse('502 Command not implemented.\r\n')
-        elif self.type == 'C':
+        elif self.mode == 'C':
             self.sendResponse('502 Command not implemented.\r\n')
         else:
             self.sendResponse('501 Syntax error in parameters or arguments.\r\n')
@@ -191,11 +191,11 @@ class FTPServerProtocol(threading.Thread):
         log('STRU', file_structure)
         self.file_structure = file_structure
 
-        if self.type == 'F':
+        if self.file_structure == 'F':
             self.sendResponse('200 File Strcture = File.\r\n')
-        elif self.type == 'R':
+        elif self.file_structure == 'R':
             self.sendResponse('502 Command not implemented.\r\n')
-        elif self.type == 'P':
+        elif self.file_structure == 'P':
             self.sendResponse('502 Command not implemented.\r\n')
 
     def STAT(self, client_command):
