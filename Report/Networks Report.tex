@@ -88,7 +88,16 @@ The File Transfer Protocol (FTP) is essential in the implementation of a File Tr
 
 \section{SYSTEM OVERVIEW}
 \subsection{FTP Server}
+The FTP server runs from the user's local host and allows users to connect through a locally hosted FTP client, as well as through clients on the same network. The server facilitates the storage of files and a user management system. The server is capable of running on any Unix based system.
+
+The server's user management system functions by requesting users to authenticate themselves upon connecting to the server. This information is used to provide each user with their own maintained file repository. The repository implementation allows the user to only access their files and prevents users from being aware of other user repositories, providing a secure and user-tailored experience. Unauthenticated users will be unable to perform any modification operations such as uploading and deleting files.
+
+The server has been created in accordance with the RFC 959 standards to allow for compatibility with standard FTP clients, allowing users to connect to the server from a range of clients. An extensive number of RFC commands have been implemented to provide improved compatibility and functionality for FTP clients which utilise the additional commands. A server logger has also been implemented to track client requests in real-time for server monitoring and debugging capabilities.
+
+Multi-threading has been utilised in the development of the server to facilitate simultaneous client connections. This supports both connection and server request operations, allowing for multiple users to connect, browse directories, and upload and download files concurrently.
+
 \subsubsection*{Unimplemented Features:}
+The file structure type of the server is defaulted to the file structure, with the page and record structures not being implemented due to complexity and time overhead. The data transmission mode of the server is defaulted to the stream mode, with the block and compression modes not being implemented due to complexity and time overhead. The default structure type and data transmission mode is set to be the file structure and stream mode respectively for any FTP application in accordance with RFC 959, thus no client compatibility issues will be encountered \cite{rfc}. The lack of compression data transmission mode results in a lower available bandwidth for very large network transmissions \cite{rfc}.
 
 \subsection{FTP Client}
 The FTP client runs from the user's local host and allows the user to interact with the FTP server in order to transfer files. In order to improve user experience, a client with a graphical user interface (GUI) was implemented. 
@@ -106,15 +115,12 @@ The feature to change the file structure from file to record or page was not imp
 
 ** Rename from and to if not implemented
 
-\section{COMMANDS AND REPLY CODES}
+\section{COMMANDS AND REPLY CODES} \label{sec:commands}
 
 \section{IMPLEMENTATION DETAILS}
-The server and the client were both implemented using Python 3. On both systems, all communication sockets are created using the Python \texttt{socket} module \cite{socket}. The sending and receiving of messages are also performed using methods from this module. Interfacing with the operating system is performed using the \texttt{os} module \cite{os}. This module allows for the traversing of paths in the operating system, as well as for saving and opening files \cite{os}.
+The server and the client were both implemented using Python 3. On both systems, all communication sockets are created using the Python \texttt{socket} module \cite{socket}. The sending and receiving of messages are also performed using methods from this module. Interfacing with the operating system is performed using the \texttt{os} module \cite{os}. This module allows for the traversing of paths in the operating system, as well as for saving and opening files \cite{os}. 
 
-\subsection{Server}
-
-\subsection{Client}
-In order to connect to the server, once the user has supplied the server address and port, a TCP connection is created between the server and the client. This TCP connection acts as a control connection to transfer FTP commands and replies between the client and the server \cite{kurose}. When sending FTP commands to the server, the messages are formatted using the format in \figref{fig:commandformat}. In the figure, SP indicates a space and CRLF is the end of line sequence (\escape{r}\escape{n}). A \texttt{send()} function was created which takes in a string containing the FTP command, a space and the arguments. The end of line sequence is then appended to the string and the resulting string is transmitted to the server. The use of this function ensures that all messages sent to the server have the correct format. Once any control message has been sent to the server, the client receives the response, and decodes it into a string in the \texttt{receive()} function. To allow the user to see the responses from the server, all received responses are printed onto the GUI. In order to ensure that the \texttt{receive()} function is called after every message is sent, an \texttt{action()} function was created which calls the \texttt{send()} function and then the \texttt{receive()} function. 
+Communication between the server and client is performed through the establishment of a TCP connection. This TCP connection acts as a control connection to transfer FTP commands and replies between the client and the server \cite{kurose}. When sending FTP commands to the server, the messages are formatted using the format in \figref{fig:commandformat}. In the figure, SP indicates a space and CRLF is the end of line sequence (\escape{r}\escape{n}). All communicated commands utilise \texttt{UTF-8} encoding to ensure communication compatibility.
 
 \begin{figure}[h]
 	\centering
@@ -129,6 +135,26 @@ In order to connect to the server, once the user has supplied the server address
 	\caption{FTP Command Format}
 	\label{fig:commandformat}
 \end{figure}
+
+\subsection{Server}
+In order to host client connections the server listens for any incoming connections which is established as a TCP connection between the two endpoints. A \texttt{serverListener()} function was created for this purpose with a socket configured to utilise the \texttt{SO\_REUSEADDR} argument which allows for active client connections to be maintained in the event of a sudden server restart. 
+
+Each new incoming client connection was handled by binding the connection to a new thread to handle simultaneous connections. The instantiated thread waits for client transmission using the \texttt{recv()} function which is then decoded and the requested command is executed with a resulting response code that is encoding and sent back to the client using the \texttt{send()} function. The server utilises responses to provide the client with a result corresponding to the requested command. The aforementioned process is illustrated in \figref{fig:server}. These responses indicate command successes, errors, mode changes, and other relevant indicators. These response codes are described in Section~\ref{sec:commands}
+
+\subsubsection*{Configuration:}
+The server provides a range of configuration commands for clients to utilise based on how they are attempting to interact with the server. \texttt{PASV} specifies the server Data Transfer Process (DTP) to listen on a non-default data port to wait for a connection rather than initiate one upon receipt of a transfer command. \texttt{PORT} offers similar functionality however, the port is explicitly specified by the client. \texttt{MODE} specifies the data transfer method to be utilised by the server. \texttt{STRU} specifies the type of file structure to be used for representation of data by the server.
+
+\subsubsection*{File browser:}
+The server provides a range of file browser commands that offer the functionality of file browser commands in a terminal client. \texttt{PWD} prints the path of the current working directory. \texttt{CWD} allows for the client to change their current working directory path to another location. \texttt{CDUP} allows for the client to change the current working directory to the parent directory. \texttt{MKD} allows the client to make a directory in the current directory. \texttt{RMD} allows the client to remove the specified directory from the current directory. \texttt{DELE} allows the client to remove the specified directory from the current directory. \texttt{LIST} provides a list of content contained within the current working directory. Any deletion operation requires a user to be authenticated. A custom utility was created for \texttt{LIST} function to provide the client with as comprehensive information of the directory contents such as file permissions, file size and user group. \texttt{RNFR} and \texttt{RNTO} allows a client to rename a folder or file on the server.
+
+\subsubsection*{File transfer:}
+The server provides comprehensive functionality in its ability to handle file uploads and downloads. This begins with allowing clients to specify the file type through the \texttt{TYPE} command, allowing the differentiation between ASCII and binary file transfer. \texttt{RETR} and \texttt{STOR} facilitate a file being downloaded and uploaded respectively from the server. Furthermore, \texttt{APPE} allows a file to be uploaded with its content being appended to the file if it already exists on the server otherwise it server the same purpose as \texttt{STOR}. Any upload operation requires a user to be authenticated.
+
+\subsubsection*{Miscellaneous:}
+In addition to the existing server infrastructure, additional commands exist to improve the user experience. \texttt{NLST} returns only the names of content within a directory. \texttt{REST} specifies the server marker at which a file transfer is to be restarted. \texttt{SYST} returns the operating system of the server host. \texttt{HELP} returns the list of available server commands and their parameters to be supplied for successful use. \texttt{NOOP} functions as a connection testing command to ensure the client is still connected to the server. Finally, \texttt{QUIT} closes the client connection.
+
+\subsection{Client}
+In order to connect to the server, once the user has supplied the server address and port, a TCP connection is created between the server and the client. To communicate with the server, a \texttt{send()} function was created which takes in a string containing the FTP command, a space and the arguments. The end of line sequence is then appended to the string and the resulting string is transmitted to the server. The use of this function ensures that all messages sent to the server have the correct format. Once any control message has been sent to the server, the client receives the response, and decodes it into a string in the \texttt{receive()} function. To allow the user to see the responses from the server, all received responses are printed onto the GUI. In order to ensure that the \texttt{receive()} function is called after every message is sent, an \texttt{action()} function was created which calls the \texttt{send()} function and then the \texttt{receive()} function. 
 
 Before uploading or downloading a file, the client sends a \texttt{PASV} command, which requests that the server creates a new data port and listens on that port for a connection from the client \cite{rfc}. As a response to the command, the server sends the client the IP address and port number of the new socket. The port number, which is a 16 bit number, is sent to the client as two eight bit numbers  \cite{rfc}. The port is therefore calculated by multiplying the first number (the most significant byte) by 256 and adding the result to the second number \cite{rfc}. Thereafter, the client connects to the port so that data can be transferred.
 
@@ -175,12 +201,12 @@ Furthermore, both the server and the client implement features beyond those ment
 \subsection{Limitations}
 The largest limitation of the implemented system is that the client only functions correctly on Mac OS X operating systems. This is a limitation as it reduces the number of people who are able to use the developed client.
 
-A limitation of the server is that it does not have the functionality to implement a file structure other than file, nor a data transmission mode other than stream. The implications of this is that a standard FTP client will be required to use the default mode and structure, which may limit the functionality of the client.
+A limitation of the server is that it does not have the functionality to implement a file structure other than file, nor a data transmission mode other than stream. The implications of this is that a standard FTP client will be required to use the default mode and structure, which may limit the functionality of the client. Data transmissions cannot be automatically restarted when using the stream transmission mode.
 
-Since the append command is never sent by the client, if the user tries to upload a file with a name that already exists in the current directory, the preexisting file will be overwritten. This could result in the accidental loss of the user's data. Another limitation lies within the file systems in the client GUI. After a file or directory has been modified, it does not update automatically. It needs to be reselected in order for the modifications to be loaded.
+Since the append command is never sent by the client, if the user tries to upload a file with a name that already exists in the current directory, the pre-existing file will be overwritten. This could result in the accidental loss of the user's data. Another limitation lies within the file systems in the client GUI. After a file or directory has been modified, it does not update automatically. It needs to be reselected in order for the modifications to be loaded.
 
 \subsection{Future Development}
-For future development, the server should be enhanced to handle different file types and transmission modes. The client should implement an automatic refresh every time a file or folder is modified. Furthermore, the functionality of the client should be enhance to cater for more FTP commands.
+For future development, the server should be enhanced to handle different file types and transmission modes. The client should implement an automatic refresh every time a file or folder is modified. Furthermore, the functionality of the client should be enhanced to cater for more FTP commands.
 
 \section{CODE STRUCTURE}
 
@@ -202,7 +228,18 @@ The design, implementation and testing of a File Transfer Application was presen
 {A\arabic{figure}}
 \onecolumn
 \begin{appendix} \label{sec:appendix}
-		
+
+\section{Server Algorithms}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Server.png}
+	\caption{Flow chart depicting the process of server handling connections and client requests}
+	\raggedright
+	\label{fig:server}	
+\end{figure}
+
+\newpage
 \section{Client Algorithms}
 
 \begin{figure}[h]
