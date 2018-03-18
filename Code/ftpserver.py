@@ -15,7 +15,6 @@ except socket.gaierror:
 
 port = 21
 working_directory  = os.getcwd()
-allow_delete = True
 ascii_buffer = 1024
 binary_buffer = 4194304
 
@@ -25,6 +24,7 @@ class FTPServerProtocol(threading.Thread):
         self.authenticated      = False
         self.pasv_mode          = False
         self.rest               = False
+        self.allow_delete       = False
         self.working_directory  = working_directory
         self.base_path          = working_directory
         self.command_socket     = command_socket
@@ -146,6 +146,7 @@ class FTPServerProtocol(threading.Thread):
             self.sendResponse('230 User logged in, proceed.\r\n')
             self.password = password
             self.authenticated = True
+            self.allow_delete = True
 
     def TYPE(self, type):
         # Specify file mode to be handled
@@ -315,7 +316,7 @@ class FTPServerProtocol(threading.Thread):
             self.sendResponse('530 User not logged in.\r\n')
         elif not os.path.exists(server_path):
             self.send('550 DELE failed File %s does not exist\r\n' % server_path)
-        elif not allow_delete:
+        elif not self.allow_delete:
             self.send('450 DELE failed delete not allowed.\r\n')
         else:
             os.remove(server_path)
@@ -343,7 +344,7 @@ class FTPServerProtocol(threading.Thread):
 
         if not self.authenticated:
             self.sendResponse('530 User not logged in.\r\n')
-        elif not allow_delete:
+        elif not self.allow_delete:
             self.sendResponse('450 Invalid permissions.\r\n')
         elif not os.path.exists(server_path):
             self.sendResponse('550 RMDIR failed Directory "%s" not exists.\r\n' % server_path)
