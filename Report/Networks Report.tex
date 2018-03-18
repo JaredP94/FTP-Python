@@ -168,8 +168,7 @@ Since the FTP server has two clear parts, the server and the client, the work wa
 In order to test the system, it was necessary to test all of the implemented functionality on both the server and the client, as well as to test the interaction between the server and a standard FTP client, and between the client and a standard FTP server. This functionality was tested by performing actions on the various clients and then viewing the messages sent and responses receiving using Wireshark.
 
 \subsection{Interaction between the implemented FTP server and client}
-\figref{fig:gui} presented an image of the client interacting with the implemented server. From the image, it is clear that there is a unique repository for the user, and that the user is unable to navigate to other user's repositories.
-
+\figref{fig:gui} presents an image of the client interacting with the implemented server. From the image, it is clear that there is a unique repository for the user, and that the user is unable to navigate to other user's repositories.
 
 \subsection{Interaction between a standard FTP server and the implemented client}
 In testing this interaction, it was necessary to ensure that the created client and the standard server were compatible and that all of the functionality implemented in the client functioned correctly when paired with a standard server.
@@ -243,7 +242,8 @@ The design, implementation and testing of a File Transfer Application was presen
 
 
 \section{Implemented Commands and Reply Codes}
-
+\setcounter{table}{0}
+\renewcommand{\thetable}{B\arabic{table}}
 
 \begin{longtable}{|p{2cm}|p{7cm}|p{7cm}|}
 		\caption{Table detailing the implemented commands and reply codes}
