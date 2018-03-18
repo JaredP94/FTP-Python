@@ -258,7 +258,7 @@ class FTPServerProtocol(threading.Thread):
         log('CWD', server_path)
 
         if not os.path.exists(server_path) or not os.path.isdir(server_path):
-            self.sendResponse('550 CWD failed Directory not exists.\r\n')
+            self.sendResponse('550 CWD failed Directory does not exist.\r\n')
             return
 
         self.working_directory = directory_path
@@ -285,9 +285,9 @@ class FTPServerProtocol(threading.Thread):
         if not self.authenticated:
             self.sendResponse('530 User not logged in.\r\n')
         elif not os.path.exists(server_path):
-            self.send('550 DELE failed File %s not exists.\r\n' % server_path)
+            self.send('550 DELE failed File %s does not exist\r\n' % server_path)
         elif not allow_delete:
-            self.send('450 DELE failed delete not allow.\r\n')
+            self.send('450 DELE failed delete not allowed.\r\n')
         else:
             os.remove(server_path)
             self.sendResponse('250 File deleted.\r\n')
@@ -304,7 +304,7 @@ class FTPServerProtocol(threading.Thread):
                 os.mkdir(server_path)
                 self.sendResponse('257 Directory created.\r\n')
             except OSError:
-                self.sendResponse('550 MKD failed Directory "%s" already exists.\r\n' % server_path)
+                self.sendResponse('550 MKD failed. Directory "%s" already exists.\r\n' % server_path)
 
     def RMD(self, dirname):
         # Removes specified directory at current path directory
@@ -328,7 +328,7 @@ class FTPServerProtocol(threading.Thread):
         log('RNFR', server_path)
 
         if not os.path.exists(server_path):
-            self.sendResponse('550 RNFR failed File or Directory %s not exists.\r\n' % server_path)
+            self.sendResponse('550 RNFR failed. File or Directory %s does not exist.\r\n' % server_path)
         else:
             self.rnfr = server_path
             self.sendResponse('350 RNFR successful - awaiting RNTO')
@@ -339,7 +339,7 @@ class FTPServerProtocol(threading.Thread):
         log('RNTO', server_path)
 
         if not os.path.exists(os.path.sep):
-            self.sendResponse('550 RNTO failed File or Direcotry  %s not exists.\r\n' % server_path)
+            self.sendResponse('550 RNTO failed. File or Directory  %s does not exist.\r\n' % server_path)
         else:
             try:
                 os.rename(self.rnfr, server_path)
@@ -390,7 +390,7 @@ class FTPServerProtocol(threading.Thread):
     def STOR(self, filename):
         # Causes the server-DTP to accept the data transferred via the data connection and to store the data as a file at the server site
         if not self.authenticated:
-            self.sendResponse('530 STOR failed User not logged in.\r\n')
+            self.sendResponse('530 STOR failed. User is not logged in.\r\n')
             return
 
         server_path = self.base_path + filename
@@ -426,7 +426,7 @@ class FTPServerProtocol(threading.Thread):
         # Causes the server-DTP to accept the data transferred via the data connection and to store the data in a file at the server site
         # If file specified in pathname exists at server site, the data shall be appended to that file; otherwise the file shall be created at the server site.
         if not self.authenticated:
-            self.sendResponse('530 APPE failed User not logged in.\r\n')
+            self.sendResponse('530 APPE failed. User is not logged in.\r\n')
             return
 
         server_path = filename.endswith(os.path.sep) and filename or os.path.join(self.base_path + self.working_directory, filename)
