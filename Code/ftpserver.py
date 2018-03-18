@@ -505,9 +505,9 @@ class FTPServerProtocol(threading.Thread):
             REST [position] Marks the beginning (REST) ​​The argument on behalf of the server you want to re-start
                  the file transfer. This command and Do not send files, but skip the file specified data checkpoint.
             RETR This command allows server-FTP send a copy of a file with the specified path name to the data
-                 connection The other end.
+                 connection on the other end.
             STOR This command allows server-DTP to receive data transmitted via a data connection, and data is
-                 stored as A file server site.
+                 stored as a file on the server site.
             APPE This command allows server-DTP to receive data transmitted via a data connection, and data is stored
                  as A file server site.
             SYST This command is used to find the server's operating system type.

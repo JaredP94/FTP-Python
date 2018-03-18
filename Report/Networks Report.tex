@@ -19,6 +19,7 @@
 \usepackage{algorithm,algpseudocode}
 \usepackage{balance}
 \usepackage{pdfpages}
+\usepackage{longtable}
 \usepackage{tikz} % for drawing stuff
 \usetikzlibrary{positioning} % for relative coordinates
 \usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
@@ -107,6 +108,19 @@ The feature to change the file structure from file to record or page was not imp
 ** Rename from and to if not implemented
 
 \section{COMMANDS AND REPLY CODES}
+There are five groups of reply codes determined by the first digit of the three digit code \cite{rfc}.
+
+The groups are as follows:
+\begin{tabbing}
+	\hspace{4em}\=\kill
+1yz	\> Positive Preliminary Reply \\ 
+2yz	\> Positive Completion Reply\\ 
+3yz	\> Positive Intermediate reply \\ 
+4yz	\> Transient Negative Completion reply \\ 
+5yz	\> Permanent Negative Completion reply
+\end{tabbing} 
+
+At least one reply code from each group has been implemented. A list of the implemented commands and the reply codes is given in Table .
 
 \section{IMPLEMENTATION DETAILS}
 The server and the client were both implemented using Python 3. On both systems, all communication sockets are created using the Python \texttt{socket} module \cite{socket}. The sending and receiving of messages are also performed using methods from this module. Interfacing with the operating system is performed using the \texttt{os} module \cite{os}. This module allows for the traversing of paths in the operating system, as well as for saving and opening files \cite{os}.
@@ -212,6 +226,73 @@ The design, implementation and testing of a File Transfer Application was presen
 	\raggedright
 	\label{fig:upload}	
 \end{figure}
+
+
+\section{Implemented Commands and Reply Codes}
+
+
+\begin{longtable}{|p{2cm}|p{7cm}|p{7cm}|}
+		\caption{Table detailing the implemented commands and reply codes}
+		\label{tab:commands} \\
+	\hline 
+	Command & Description & Reply Code \\ 
+	\hline 
+	\hline
+USER	& Allows the user to input their username in order to be authenticated  &  501 Syntax error in parameters or arguments. 331 User name okay, need password. \\ 
+	\hline 
+PASS	& Allows the user to input their password for authentication & \makecell[l]{501 Syntax error in parameters or arguments.\\503 Bad sequence of commands. \\230 User logged in, proceed.} \\ 
+	\hline 
+TYPE	& Its argument is used to specify the file type of the file to be retrieved or stored & \makecell[l]{200 Binary file mode.\\200 Ascii file mode. \\501 Syntax error in parameters or arguments.}\\ 
+	\hline 
+PASV	& Requests that the server listens on a new data port and waits for a connection & 227 Entering Passive Mode (\textit{IP Address, Port}) \\ 
+	\hline 
+MODE	& Its argument is used to specify the data transfer type. Only stream transfer mode was implemented & \makecell[l]{200 Stream transfer mode. \\502 Command not implemented. \\501 Syntax error in parameters or arguments.} \\ 
+	\hline 
+STRU	& Its argument is used to specify the file structure of the file to be retrieved or stored. Only the File type was implemented  & \makecell[l]{200 File Structure = File. \\502 Command not implemented.} \\ 
+	\hline 
+STAT	& The command causes a status response to be sent over the control connection. The functionality for this command was not implemented & 502 Command not implemented. \\ 
+	\hline 
+PORT	& The argument specifies the data port to be used in the data connection & 200 Get port. \\ 
+	\hline 
+LIST & Returns a list of the contents of a directory. The argument is used to specify the path in which the contents should be returned. If an argument is not provided, a list of the contents of the current working directory is supplied &\makecell[l]{530 User not logged in. \\550 LIST failed Path name not exists. \\150 Here is listing. \\226 List done.}\\ 
+	\hline 
+NLST & Calls the LIST command & \makecell[l]{530 User not logged in. \\550 LIST failed Path name not exists. \\150 Here is listing. \\226 List done.} \\ 
+	\hline 
+CWD	& Changes the working directory of the server. The argument is used to specify the new working directory.  & \makecell[l]{550 CWD failed. Directory does not exist. \\250 CWD Command successful.} \\ 
+	\hline 
+PWD	& Returns the current working directory & 257 \textit{Path to current working directory} \\ 
+	\hline 
+CDUP	& Changes the working directory to the parent of the current directory. & 200 OK. \\ 
+	\hline 
+DELE	& Deletes a file off the remote host. Its argument is used to specify the file to be deleted & \makecell[l]{530 User not logged in. \\550 DELE failed File \textit{file name} does not exist. \\450 DELE failed delete not allowed. \\250 File deleted.} \\ 
+	\hline 
+MKD	& Makes a file on the remote host. Its argument specifies the path to the new file and the name of the file to be created & \makecell[l]{530 User not logged in. \\257 Directory created. \\550 MKD failed. Directory "\textit{directory name}" \\already exists.}\\ 
+	\hline 
+RMD	& Deletes a directory off the remote host. Its argument is used to specify the directory to be deleted & \makecell[l]{530 User not logged in. \\450 Invalid permissions. \\250 Directory deleted.}\\ 
+	\hline 
+RNFR	& Its argument specifies a file to be renamed & \makecell[l]{550 RNFR failed. File or Directory \textit{file or}\\ \textit{directory name} does not exist. \\350 RNFR successful - awaiting RNTO}\\ 
+	\hline 
+RNTO	& Its argument specifies the new name of file. The file to be renamed was indicated using the RNFR command prior to calling the RNTO command & \makecell[l]{550 RNTO failed. File or Directory \textit{file or}\\ \textit{directory name} does not exist. \\250 RNTO successful}\\ 
+	\hline 
+REST	& The argument field represents the checkpoint at which the file transfer is to be restarted.  & 250 File position reset. \\ 
+	\hline 
+RETR	& This command causes the server to send a copy of a file over the data connection. The argument specifies the name of the file to be downloaded &  \makecell[l]{150 Opening data connection. \\226 Transfer complete.} \\ 
+	\hline 
+STOR	& This command causes the server to save a copy of a file that is sent over the data connection. The argument specifies the name of the file that is being uploaded &  \makecell[l]{530 STOR failed. User is not logged in. \\150 Opening data connection. \\226 Transfer completed.} \\ 
+	\hline 
+APPE	& This command causes the server to save a copy of a file that is sent over the data connection. If the file name exists at the path on the server, data is appended to the file. Otherwise, a new file is created &  \makecell[l]{530 APPE failed. User is not logged in. \\150 Opening data connection. \\226 Transfer completed.}\\ 
+	\hline 
+SYST	& Used to find the server's operating system type & 215 \textit{server operating system} type. \\ 
+	\hline 
+NOOP	& Prompts a 200 OK response from the server. & 200 OK. \\ 
+	\hline 
+HELP	& Displays help information &  \\ 
+	\hline 
+QUIT	& Terminates the control connection between the user and the server &  221 Goodbye.\\ 
+	\hline 
+
+\end{longtable} 
+
 
 \end{appendix}
 
