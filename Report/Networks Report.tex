@@ -19,6 +19,7 @@
 \usepackage{algorithm,algpseudocode}
 \usepackage{balance}
 \usepackage{pdfpages}
+\usepackage{longtable}
 \usepackage{tikz} % for drawing stuff
 \usetikzlibrary{positioning} % for relative coordinates
 \usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
@@ -72,9 +73,9 @@ Witwatersrand, Private Bag 3, 2050, Johannesburg, South Africa}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-\abstract{}
+\abstract{This paper presents the design, implementation and testing of a File Transfer Application, consisting of a server and a graphical user interface client. The developed system follows the guidelines set out in RFC 959, and exceeds the required minimum specifications. Wireshark was used to obtain results, and from the collected packets, it was clear that the request and response messages follow the correct order. The implemented server is able to interact with a standard FTP client, and the client is able to interact with a standard FTP server. The server is also able to handle multiple simultaneous control connections and data connections. Future reccomendations include the implementation of multiple transmission modes and file structures.}
 
-\keywords{client, file transfer protocol, server}
+\keywords{client, file transfer protocol, server, Wireshark}
 
 \maketitle
 \thispagestyle{empty}
@@ -87,6 +88,8 @@ Witwatersrand, Private Bag 3, 2050, Johannesburg, South Africa}
 The File Transfer Protocol (FTP) is essential in the implementation of a File Transfer Application. The File Transfer Protocol allows for the transfer of files between two end systems \cite{kurose}. The FTP protocol runs on top of TCP and, uniquely, makes use of two TCP connections: a control connection and a data connection \cite{kurose}. The data connection is non-persistent, and is created when the transfer of data is required \cite{kurose}. A File Transfer Application consists of an FTP server and an FTP client. This report presents the design, implementation and testing of a File Transfer Application, including an overview of the system, details of the implemented code, results and a critical analysis of the system. The division of labour between group members is also discussed.
 
 \section{SYSTEM OVERVIEW}
+The implemented system follows the guidelines set out in RFC 959 - File Transfer Protocol (FTP) \cite{rfc}. This document specifies the minimum required FTP implementation as well as the full list of FTP commands and replies.
+
 \subsection{FTP Server}
 The FTP server runs from the user's local host and allows users to connect through a locally hosted FTP client, as well as through clients on the same network. The server facilitates the storage of files and a user management system. The server is capable of running on any Unix based system.
 
@@ -113,9 +116,20 @@ Once the client has finished using the FTP connection, they can disconnect from 
 \subsubsection*{Unimplemented Features:}
 The feature to change the file structure from file to record or page was not implemented. This was not implemented since the implementation was complex and deemed unnecessary since any file can be transfered using the file structure. Furthermore, since the file structure is the default type, any server that the client wishes to interact with will be compatible with the file structure type \cite{rfc}. The client also does not allow the user the opportunity to change the transmission mode from stream to block or compression. Once again, since stream mode is the default mode, any FTP server must accept stream mode, meaning that implementation of the other types in unnecessary \cite{rfc}. The client also does not have implementation to allow the user to append data onto the end of an existing text file.
 
-** Rename from and to if not implemented
-
 \section{COMMANDS AND REPLY CODES} \label{sec:commands}
+There are five groups of reply codes determined by the first digit of the three digit code \cite{rfc}. These groups indicate whether the response is positive or negative and allow the client to make an informed decision as to its course of action.
+
+The groups are as follows:
+\begin{tabbing}
+	\hspace{4em}\=\kill
+1xx	\> Positive Preliminary Reply \\ 
+2xx	\> Positive Completion Reply\\ 
+3xx	\> Positive Intermediate reply \\ 
+4xx	\> Transient Negative Completion reply \\ 
+5xx	\> Permanent Negative Completion reply
+\end{tabbing} 
+
+At least one reply code from each group has been implemented. A list of the implemented commands and the reply codes is given in \tabref{tab:commands}. The table also contains a brief description of the purpose of each command.
 
 \section{IMPLEMENTATION DETAILS}
 The server and the client were both implemented using Python 3. On both systems, all communication sockets are created using the Python \texttt{socket} module \cite{socket}. The sending and receiving of messages are also performed using methods from this module. Interfacing with the operating system is performed using the \texttt{os} module \cite{os}. This module allows for the traversing of paths in the operating system, as well as for saving and opening files \cite{os}. 
@@ -176,15 +190,28 @@ The client was implemented as a GUI using the PyQt4 module. The GUI provided a s
 \section{DIVISION OF WORK}
 Since the FTP server has two clear parts, the server and the client, the work was divided accordingly. Jared Ping wrote all of the code for the server, as well as the sections in the report pertaining to the server. Kayla-Jade Butkow wrote the code for the client, as the sections of the report related to the client. Kayla-Jade also wrote the section pertaining to the commands and reply codes and the introduction, while Jared detailed the structure of the code and wrote the conclusion. The critical analysis and results sections and the abstract were written by the partners together.
 
-\section{RESULTS}
+\section{RESULTS} \label{sec:results}
+In order to test the system, it was necessary to test all of the implemented functionality on both the server and the client, as well as to test the interaction between the server and a standard FTP client, and between the client and a standard FTP server. This functionality was tested by performing actions on the various clients and then viewing the messages sent and responses receiving using Wireshark.
+
+\subsection{Interaction between the implemented FTP server and client}
+
+\figref{fig:gui} presents an image of the client interacting with the implemented server. From the image, it is clear that there is a unique repository for the user, and that the user is unable to navigate to other user's repositories.
+
+\subsection{Interaction between a standard FTP server and the implemented client}
+In testing this interaction, it was necessary to ensure that the created client and the standard server were compatible and that all of the functionality implemented in the client functioned correctly when paired with a standard server. The server used can be found at ELEN4017.ug.eie.wits.ac.za.
+
+The most important functionality to be tested is the ability to log into the server, navigate through the remote file system and upload and download files. Furthermore, the ability to create a directory, delete files and directories and to log out of the server were also tested. Wireshark screenshots indicating this functionality is given in \secref{sec:ourClientWitsServer}. From the images in \secref{sec:ourClientWitsServer}, it is evident that all functionality works as expected when paired with a standard FTP server.
+
+\subsection{Interaction between the implemented FTP server and a standard FTP client}
+The testing of this interaction is essential to ensure that the server can interact with clients other than the one created. A main purpose of this testing is to ensure that the server returns the correct error code when a requested command has not been implemented.
 
 \section{CRITICAL ANALYSIS}
 An analysis of the successes and limitations of the implemented system is given below.
 
 \subsection{Successes}
-The system is a fully functional, stable and well implemented solution. It fulfills all of the requirements for a file transfer application, namely:
+The system is a fully functional, stable and well implemented solution. As proven in \secref{sec:results}, it fulfills all of the requirements for a file transfer application, namely:
 \begin{itemize}
-	\item A client and a server that are able to meet all of the requirements of a minimal FTP implementation, as defined by \cite{rfc}, including server reply messages and error handling
+	\item A client and a server that are able to meet all of the requirements of a minimal FTP implementation, as defined in \cite{rfc}, including server reply messages and error handling
 	\item A client with a simple user interface and that is able to interact with a standard FTP server
 	\item A server that maintains repositories for different users and that is able to interact with a standard FTP client
 	\item A server that can handle multiple clients simultaneously using multi-threading
@@ -196,7 +223,9 @@ The system is a fully functional, stable and well implemented solution. It fulfi
 
 The system also performs all of these actions without the use of any high-level FTP libraries. 
 
-Furthermore, both the server and the client implement features beyond those mentioned in the minimum FTP implementation, which is regarded as a large success of the system. It was stipulated that five reply code should be implemented, however on account of the large number of features implemented, 38 reply code were implemented. This allows for a more informative and complete system, and is also seen as a success.
+Furthermore, both the server and the client implement features beyond those mentioned in the minimum FTP implementation, which is regarded as a large success of the system. It was stipulated that five reply code should be implemented, however on account of the large number of features implemented, many reply code were implemented (as indicated in \tabref{tab:commands}). This allows for a more informative and complete system, and is also seen as a success.
+
+Another large success of the project is aspect of multi-threading within the server. Not only is the server able to maintain control connections with multiple clients simultaneously, it is also able to handle multiple simultaneous upload and download processes. This enhances the user friendliness of the system, as multiple users can use it at the same time without their processes being affected.
 
 \subsection{Limitations}
 The largest limitation of the implemented system is that the client only functions correctly on Mac OS X operating systems. This is a limitation as it reduces the number of people who are able to use the developed client.
@@ -206,7 +235,7 @@ A limitation of the server is that it does not have the functionality to impleme
 Since the append command is never sent by the client, if the user tries to upload a file with a name that already exists in the current directory, the pre-existing file will be overwritten. This could result in the accidental loss of the user's data. Another limitation lies within the file systems in the client GUI. After a file or directory has been modified, it does not update automatically. It needs to be reselected in order for the modifications to be loaded.
 
 \subsection{Future Development}
-For future development, the server should be enhanced to handle different file types and transmission modes. The client should implement an automatic refresh every time a file or folder is modified. Furthermore, the functionality of the client should be enhanced to cater for more FTP commands.
+For future development, the server should be enhanced to handle different file structures and transmission modes. The client should implement an automatic refresh every time a file or folder is modified. Furthermore, the functionality of the client should be enhanced to cater for more FTP commands.
 
 \section{CODE STRUCTURE}
 
@@ -249,6 +278,176 @@ The design, implementation and testing of a File Transfer Application was presen
 	\raggedright
 	\label{fig:upload}	
 \end{figure}
+
+
+\section{Implemented Commands and Reply Codes}
+\setcounter{table}{0}
+\renewcommand{\thetable}{B\arabic{table}}
+
+\begin{longtable}{|p{2cm}|p{7cm}|p{7cm}|}
+		\caption{Table detailing the implemented commands and reply codes}
+		\label{tab:commands} \\
+	\hline 
+	Command & Description & Reply Code \\ 
+	\hline 
+	\hline
+USER	& Allows the user to input their username in order to be authenticated  &  501 Syntax error in parameters or arguments. 331 User name okay, need password. \\ 
+	\hline 
+PASS	& Allows the user to input their password for authentication & \makecell[l]{501 Syntax error in parameters or arguments.\\503 Bad sequence of commands. \\230 User logged in, proceed.} \\ 
+	\hline 
+TYPE	& Its argument is used to specify the file type of the file to be retrieved or stored & \makecell[l]{200 Binary file mode.\\200 Ascii file mode. \\501 Syntax error in parameters or arguments.}\\ 
+	\hline 
+PASV	& Requests that the server listens on a new data port and waits for a connection & 227 Entering Passive Mode (\textit{IP Address, Port}) \\ 
+	\hline 
+MODE	& Its argument is used to specify the data transfer type. Only stream transfer mode was implemented & \makecell[l]{200 Stream transfer mode. \\502 Command not implemented. \\501 Syntax error in parameters or arguments.} \\ 
+	\hline 
+STRU	& Its argument is used to specify the file structure of the file to be retrieved or stored. Only the File type was implemented  & \makecell[l]{200 File Structure = File. \\502 Command not implemented.} \\ 
+	\hline 
+STAT	& The command causes a status response to be sent over the control connection. The functionality for this command was not implemented & 502 Command not implemented. \\ 
+	\hline 
+PORT	& The argument specifies the data port to be used in the data connection & 200 Get port. \\ 
+	\hline 
+LIST & Returns a list of the contents of a directory. The argument is used to specify the path in which the contents should be returned. If an argument is not provided, a list of the contents of the current working directory is supplied &\makecell[l]{530 User not logged in. \\550 LIST failed Path name not exists. \\150 Here is listing. \\226 List done.}\\ 
+	\hline 
+NLST & Calls the LIST command & \makecell[l]{530 User not logged in. \\550 LIST failed Path name not exists. \\150 Here is listing. \\226 List done.} \\ 
+	\hline 
+CWD	& Changes the working directory of the server. The argument is used to specify the new working directory.  & \makecell[l]{550 CWD failed. Directory does not exist. \\250 CWD Command successful.} \\ 
+	\hline 
+PWD	& Returns the current working directory & 257 \textit{Path to current working directory} \\ 
+	\hline 
+CDUP	& Changes the working directory to the parent of the current directory. & 200 OK. \\ 
+	\hline 
+DELE	& Deletes a file off the remote host. Its argument is used to specify the file to be deleted & \makecell[l]{530 User not logged in. \\550 DELE failed File \textit{file name} does not exist. \\450 DELE failed delete not allowed. \\250 File deleted.} \\ 
+	\hline 
+MKD	& Makes a file on the remote host. Its argument specifies the path to the new file and the name of the file to be created & \makecell[l]{530 User not logged in. \\257 Directory created. \\550 MKD failed. Directory "\textit{directory name}" \\already exists.}\\ 
+	\hline 
+RMD	& Deletes a directory off the remote host. Its argument is used to specify the directory to be deleted & \makecell[l]{530 User not logged in. \\450 Invalid permissions. \\250 Directory deleted.}\\ 
+	\hline 
+RNFR	& Its argument specifies a file to be renamed & \makecell[l]{550 RNFR failed. File or Directory \textit{file or}\\ \textit{directory name} does not exist. \\350 RNFR successful - awaiting RNTO}\\ 
+	\hline 
+RNTO	& Its argument specifies the new name of file. The file to be renamed was indicated using the RNFR command prior to calling the RNTO command & \makecell[l]{550 RNTO failed. File or Directory \textit{file or}\\ \textit{directory name} does not exist. \\250 RNTO successful}\\ 
+	\hline 
+REST	& The argument field represents the checkpoint at which the file transfer is to be restarted.  & 250 File position reset. \\ 
+	\hline 
+RETR	& This command causes the server to send a copy of a file over the data connection. The argument specifies the name of the file to be downloaded &  \makecell[l]{150 Opening data connection. \\226 Transfer complete.} \\ 
+	\hline 
+STOR	& This command causes the server to save a copy of a file that is sent over the data connection. The argument specifies the name of the file that is being uploaded &  \makecell[l]{530 STOR failed. User is not logged in. \\150 Opening data connection. \\226 Transfer completed.} \\ 
+	\hline 
+APPE	& This command causes the server to save a copy of a file that is sent over the data connection. If the file name exists at the path on the server, data is appended to the file. Otherwise, a new file is created &  \makecell[l]{530 APPE failed. User is not logged in. \\150 Opening data connection. \\226 Transfer completed.}\\ 
+	\hline 
+SYST	& Used to find the server's operating system type & 215 \textit{server operating system} type. \\ 
+	\hline 
+NOOP	& Prompts a 200 OK response from the server. & 200 OK. \\ 
+	\hline 
+HELP	& Displays help information &  \\ 
+	\hline 
+QUIT	& Terminates the control connection between the user and the server &  221 Goodbye.\\ 
+	\hline 
+
+\end{longtable}
+\setcounter{figure}{0} 
+\renewcommand{\thefigure}
+{C\arabic{figure}}
+\section{Results}
+This section contains all of the results collected during the testing of the system. This includes Wireshark excerpts and an image of the client GUI.
+
+\subsection{Interaction between the implemented FTP server and client}
+This section contains images and Wireshark screenshots depicting the interaction between the implemented client and server when running on two different hosts within the same network.
+ 
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{gui.png}
+	\caption{GUI client interacting with the implemented FTP server}
+	\raggedright
+	\label{fig:gui}	
+\end{figure}
+
+\subsection{Interaction between a standard FTP server and the implemented client} \label{sec:ourClientWitsServer}
+
+Wireshark screenshots depicting the interaction between the created client and the standard FTP server are given in this section.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{loginWits.png}
+	\caption{FTP commands and replies when logging in}
+	\raggedright
+	\label{fig:loginWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{navigateWits.png}
+	\caption{FTP commands and replies when navigating the remote file system}
+	\raggedright
+	\label{fig:navigateWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{textUploadWits.png}
+	\caption{FTP commands and replies when uploading an ASCII type file}
+	\raggedright
+	\label{fig:textUploadWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{binaryUploadWits.png}
+	\caption{FTP commands and replies when uploading an image type file}
+	\raggedright
+	\label{fig:binaryUploadWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{downloadTextWits.png}
+	\caption{FTP commands and replies when downloading an ASCII type file}
+	\raggedright
+	\label{fig:textDownloadWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{downloadImageWits.png}
+	\caption{FTP commands and replies when downloading an image type file}
+	\raggedright
+	\label{fig:binaryDownloadWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{makeDirectoryWits.png}
+	\caption{FTP commands and replies when creating a directory}
+	\raggedright
+	\label{fig:makeDirectoryWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{deleteDirWits.png}
+	\caption{FTP commands and replies when deleting a directory}
+	\raggedright
+	\label{fig:deleteDirWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{deleteFileWits.png}
+	\caption{FTP commands and replies when deleting a file}
+	\raggedright
+	\label{fig:deleteFileWits}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{logoutWits.png}
+	\caption{FTP commands and replies when logging out from the server}
+	\raggedright
+	\label{fig:logoutWits}	
+\end{figure}
+
+\subsection{Interaction between the implemented FTP server and a standard FTP client}
+This section contains Wireshark excerpts depicting the interaction between the server and a standard client when running on two different hosts within the same network.
 
 \end{appendix}
 
