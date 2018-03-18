@@ -567,26 +567,30 @@ class Example(QtGui.QMainWindow):
         self.pathServer = self.getTreePathServer(index)
         print("Path in traverse server ")
         print(self.pathServer)
-        if self.pathServer[0]=='/' and self.pathServer[1]=='/':
-            self.pathServer=self.pathServer[1:]
-        
-        reply = self.action('CWD '+ self.pathServer)
-        time.sleep(.05)
-        while b'226' in reply:
-            reply=self.recieve()
 
-        if b'250' in reply:
-            self.updateTreeServer()
-            indexItem = self.model.index(index.row(), 0, index.parent())
-            self.fileNameServer = self.model.itemFromIndex(indexItem).text()
-            self.filePathServer = self.getTreePathServer(index)
-            self.model.removeRow(0)
-        elif b'550' in reply:
-            indexItem = self.model.index(index.row(), 0, index.parent())
-            self.fileNameServer = self.model.itemFromIndex(indexItem).text()
-            print("file name server is: ")
-            print(self.fileNameServer)
-            self.filePathServer = self.getTreePathServer(index)
+        try:
+            if self.pathServer[0]=='/' and self.pathServer[1]=='/':
+                self.pathServer=self.pathServer[1:]
+        
+            reply = self.action('CWD '+ self.pathServer)
+            time.sleep(.05)
+            while b'226' in reply:
+                reply=self.recieve()
+
+            if b'250' in reply:
+                self.updateTreeServer()
+                indexItem = self.model.index(index.row(), 0, index.parent())
+                self.fileNameServer = self.model.itemFromIndex(indexItem).text()
+                self.filePathServer = self.getTreePathServer(index)
+                self.model.removeRow(0)
+            elif b'550' in reply:
+                indexItem = self.model.index(index.row(), 0, index.parent())
+                self.fileNameServer = self.model.itemFromIndex(indexItem).text()
+                print("file name server is: ")
+                print(self.fileNameServer)
+                self.filePathServer = self.getTreePathServer(index)
+        except:
+            pass
 
     def updateTreeServer(self):
         # Get current path of server
