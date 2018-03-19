@@ -201,7 +201,7 @@ The most important functionality to be tested is the ability to log into the ser
 
 \secref{sec:ourserverourclient} provides Wireshark excerpts of all of the implemented server client interactions. The excerpts prove that the client and server are compatible and that all of the required FTP functionality can be performed.
 
-\figref{fig:multiple} shows that the server is able to handle multiple simultaneous connections. It can also be seen that simultaneous uploads and downloads from different users can be performed.
+\figref{fig:multiple} shows that the server is able to handle multiple simultaneous connections. It can also be seen  from \figref{fig:multipleUpload} that simultaneous uploads and downloads from different users can be performed.
 
 \subsection{Interaction between a standard FTP server and the implemented client}
 In testing this interaction, it was necessary to ensure that the created client and the standard server were compatible and that all of the functionality implemented in the client functioned correctly when paired with a standard server. The server used can be found at \textit{ELEN4017.ug.eie.wits.ac.za}.
@@ -231,7 +231,7 @@ The system is a fully functional, stable and well implemented solution. As prove
 
 The system also performs all of these actions without the use of any high-level FTP libraries. 
 
-Furthermore, both the server and the client implement features beyond those mentioned in the minimum FTP implementation, which is regarded as a large success of the system. It was stipulated that five reply code should be implemented, however on account of the large number of features implemented, many reply code were implemented (as indicated in \tabref{tab:commands}). This allows for a more informative and complete system, and is also seen as a success.
+Furthermore, both the server and the client implement features beyond those mentioned in the minimum FTP implementation, which is regarded as a large success of the system. It was stipulated that five reply code should be implemented, however on account of the large number of features, many reply code were implemented (as indicated in \tabref{tab:commands}). This allows for a more informative and complete system, and is also seen as a success.
 
 Another large success of the project is aspect of multi-threading within the server. Not only is the server able to maintain control connections with multiple clients simultaneously, it is also able to handle multiple simultaneous upload and download processes. This enhances the user friendliness of the system, as multiple users can use it at the same time without their processes being affected.
 
@@ -266,28 +266,28 @@ The design, implementation and testing of a File Transfer Application was presen
 \onecolumn
 \begin{appendix} \label{sec:appendix}
 
-\section{Server Algorithms}
+\section{Algorithms}
 
+\subsection{Server Algorithm}
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=0.8\textwidth]{Server.png}
+	\includegraphics[width=0.9\textwidth]{Server.png}
 	\caption{Flow chart depicting the process of server handling connections and client requests}
 	\raggedright
 	\label{fig:server}	
 \end{figure}
 
-\newpage
-\section{Client Algorithms}
+\subsection{Client Algorithm}
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=0.6\textwidth]{uploadfile.pdf}
+	\includegraphics[width=0.9\textwidth]{uploadfile.pdf}
 	\caption{Flow chart depicting the process of uploading a file to the server}
 	\raggedright
 	\label{fig:upload}	
 \end{figure}
 
-
+\newpage
 \section{Implemented Commands and Reply Codes}
 \setcounter{table}{0}
 \renewcommand{\thetable}{B\arabic{table}}
@@ -353,29 +353,24 @@ QUIT	& Terminates the control connection between the user and the server &  221 
 	\hline 
 
 \end{longtable}
+
+\newpage
 \setcounter{figure}{0} 
 \renewcommand{\thefigure}
 {C\arabic{figure}}
+
 \section{Results}
 This section contains all of the results collected during the testing of the system. This includes Wireshark excerpts and an image of the client GUI.
 
 \subsection{Interaction between the implemented FTP server and client}\label{sec:ourserverourclient}
-This section contains images and Wireshark screenshots depicting the interaction between the implemented client and server when running on two different hosts within the same network.
- 
+This section contains images and Wireshark screenshots (\figref{fig:gui} to \figref{fig:logout}) depicting the interaction between the implemented client and server when running on two different hosts within the same network. 
+
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=0.9\textwidth]{gui.png}
 	\caption{GUI client interacting with the implemented FTP server}
 	\raggedright
 	\label{fig:gui}	
-\end{figure}
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=0.9\textwidth]{multipleConnections.png}
-	\caption{Multiple clients connected simultaneously to the FTP server}
-	\raggedright
-	\label{fig:multiple}	
 \end{figure}
 
 \begin{figure}[h]
@@ -458,9 +453,25 @@ This section contains images and Wireshark screenshots depicting the interaction
 	\label{fig:logout}	
 \end{figure}
 
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{multipleConnections.png}
+	\caption{Multiple clients connected simultaneously to the FTP server}
+	\raggedright
+	\label{fig:multiple}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{multipleUpload.png}
+	\caption{Multiple clients simultaneously uploading files to the FTP server}
+	\raggedright
+	\label{fig:multipleUpload}	
+\end{figure}
+
 \subsection{Interaction between a standard FTP server and the implemented client} \label{sec:ourClientWitsServer}
 
-Wireshark screenshots depicting the interaction between the created client and the standard FTP server are given in this section.
+Wireshark screenshots (\figref{fig:loginWits} to \figref{fig:logoutWits}) depicting the interaction between the created client and the standard FTP server are given in this section.
 
 \begin{figure}[h]
 	\centering
@@ -543,7 +554,64 @@ Wireshark screenshots depicting the interaction between the created client and t
 \end{figure}
 
 \subsection{Interaction between the implemented FTP server and a standard FTP client} \label{sec:ourserverstandardclient}
-This section contains Wireshark excerpts depicting the interaction between the server and a standard client when running on two different hosts within the same network.
+This section contains Wireshark excerpts depicting the interaction between the server and a standard client when running on two different hosts within the same network. The images for this section are found in \figref{fig:loginclient} to \figref{fig:error}.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{theirclientLogin.png}
+	\caption{FTP commands and replies when logging in}
+	\raggedright
+	\label{fig:loginclient}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{theirclientnavigate.png}
+	\caption{FTP commands and replies when navigating the remote file system}
+	\raggedright
+	\label{fig:navigateclient}	
+\end{figure}
+
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{theirclientupload.png}
+	\caption{FTP commands and replies when uploading an image type file}
+	\raggedright
+	\label{fig:binaryUploadclient}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{theirclientdeleteanddownload.png}
+	\caption{FTP commands and replies when downloading an image type file and deleting a file}
+	\raggedright
+	\label{fig:binaryDownloadclient}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{theirclientMKD.png}
+	\caption{FTP commands and replies when creating a directory}
+	\raggedright
+	\label{fig:makeDirectoryclient}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{theirclientRMD.png}
+	\caption{FTP commands and replies when deleting a directory}
+	\raggedright
+	\label{fig:deleteDirclient}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=1\textwidth]{theirclientCommandNotKnown.png}
+	\caption{FTP commands and replies when an unimplemented command is called}
+	\raggedright
+	\label{fig:error}	
+\end{figure}
 
 \end{appendix}
 
