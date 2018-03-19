@@ -251,9 +251,10 @@ For future development, the server should be enhanced to handle different file s
 Both the server and client utilise a class based code structure. The server features a single class which utilises the thread class to instantiate server connection instances from clients. Class based methods are used to managed class properties and handle received client commands. Methods, external to the class, are used to provide logging capabilities for the server as well as implement a listener to handle incoming client connections. A utility class has been created to managed file properties and is included for use by the server. The client features a single class which contains all relevant methods to handle communication with the server.
 
 \subsection{Application Prerequisites}
-The File Transfer Application requires Python 3 and external python modules are included by the client to provide extensive functionality. The \texttt{Magic} module is utilised  to determine the file type of selected files. The \texttt{PyQt4} module is utilised to provide a GUI implementation for the client, greatly enhancing the user experience. A \texttt{requirements.txt} file has been created to assist with first time setup on new systems. This is utilised by running the following line in the terminal:
+The File Transfer Application requires Python 3 and external python modules are included by the client to provide extensive functionality. The \texttt{Magic} module is utilised  to determine the file type of selected files. The \texttt{PyQt4} module is utilised to provide a GUI implementation for the client, greatly enhancing the user experience. The \texttt{macports} package manager can be utilised in assisting with setting up the required modules. This is done by running the following commands in the terminal:
 
-\texttt{pip install -r requirements.txt}
+\texttt{port install file}
+\texttt{port-install py3-pyqt4}
 
 The server can then be initialised by running the following command:
 
