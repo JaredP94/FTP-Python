@@ -217,12 +217,12 @@ The results of the tests for this interaction are given in \secref{sec:ourserver
 An analysis of the successes and limitations of the implemented system is given below.
 
 \subsection{Successes}
-The system is a fully functional, stable and well implemented solution. As proven in \secref{sec:results}, it fulfills all of the requirements for a file transfer application, namely:
+The system is a fully functional, stable and well implemented solution. As proven in \secref{sec:results}, it fulfils all of the requirements for a file transfer application, namely:
 \begin{itemize}
 	\item A client and a server that are able to meet all of the requirements of a minimal FTP implementation, as defined in \cite{rfc}, including server reply messages and error handling
 	\item A client with a simple user interface and that is able to interact with a standard FTP server
 	\item A server that maintains repositories for different users and that is able to interact with a standard FTP client
-	\item A server that can handle multiple clients simultaneously using multi-threading
+	\item A server that can handle multiple clients simultaneously performing data transfer operations using multi-threading
 	\item The ability to upload and download various file types
 	\item The use of Wireshark to obtain results
 	\item The ability to use the system when the client and the server lie on different hosts within the same network
@@ -238,7 +238,7 @@ Another large success of the project is aspect of multi-threading within the ser
 \subsection{Limitations}
 The largest limitation of the implemented system is that the client only functions correctly on Mac OS X operating systems. This is a limitation as it reduces the number of people who are able to use the developed client.
 
-A limitation of the server is that it does not have the functionality to implement a file structure other than file, nor a data transmission mode other than stream. The implications of this is that a standard FTP client will be required to use the default mode and structure, which may limit the functionality of the client. Data transmissions cannot be automatically restarted when using the stream transmission mode.
+A limitation of the server is that it does not have the functionality to implement a file structure other than file, nor a data transmission mode other than stream. The implications of this is that a standard FTP client will be required to use the default mode and structure, which may limit the functionality of the client. Data transmissions cannot be automatically restarted when using the stream transmission mode. The server's ability to handle simultaneous data transfer translates to higher network traffic with an increase of connected clients. The server's available bandwidth is dependant on the host network and thus packet queuing can occur during peak traffic.
 
 Since the append command is never sent by the client, if the user tries to upload a file with a name that already exists in the current directory, the pre-existing file will be overwritten. This could result in the accidental loss of the user's data. Another limitation lies within the file systems in the client GUI. After a file or directory has been modified, it does not update automatically. It needs to be reselected in order for the modifications to be loaded.
 
