@@ -237,7 +237,23 @@ Since the append command is never sent by the client, if the user tries to uploa
 \subsection{Future Development}
 For future development, the server should be enhanced to handle different file structures and transmission modes. The client should implement an automatic refresh every time a file or folder is modified. Furthermore, the functionality of the client should be enhanced to cater for more FTP commands.
 
-\section{CODE STRUCTURE}
+\section{CODE STRUCTURE AND PREREQUISITES}
+
+\subsection{Code Structure}
+Both the server and client utilise a class based code structure. The server features a single class which utilises the thread class to instantiate server connection instances from clients. Class based methods are used to managed class properties and handle received client commands. Methods, external to the class, are used to provide logging capabilities for the server as well as implement a listener to handle incoming client connections. A utility class has been created to managed file properties and is included for use by the server. The client features a single class which contains all relevant methods to handle communication with the server.
+
+\subsection{Application Prerequisites}
+The File Transfer Application utilises Python 3 and external python modules are included by the client to provide extensive functionality. The \texttt{Magic} module is utilised  to determine the file type of selected files. The \texttt{PyQt4} module is utilised to provide a GUI implementation for the client, greatly enhancing the user experience. A \texttt{requirements.txt} file has been created to assist with first time setup on new systems. This is utilised by running the following line in the terminal:
+
+\texttt{pip3 install -r requirements.txt}
+
+The server can then be initialised by running the following command:
+
+\texttt{sudo python3 ftpserver.py}
+
+The use of \texttt{sudo} is due to the server running on command port 21 which requires administrative privileges. Finally, the client can be initialised by running the following command:
+
+\texttt{python3 GUIClient.py}
 
 \section{CONCLUSION} \label{sec:conclusion}
 The design, implementation and testing of a File Transfer Application was presented. The system was deemed to be a success since it met all of the basic requirements, and also implemented many additional features. Through the use of Wireshark, it is clear that the system implemented all of the required FTP reply codes and that the codes and responses are sent in the correct order. For future development, more FTP commands should be implemented in order to develop a complete File Transfer Application.
