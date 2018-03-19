@@ -193,17 +193,25 @@ Since the FTP server has two clear parts, the server and the client, the work wa
 \section{RESULTS} \label{sec:results}
 In order to test the system, it was necessary to test all of the implemented functionality on both the server and the client, as well as to test the interaction between the server and a standard FTP client, and between the client and a standard FTP server. This functionality was tested by performing actions on the various clients and then viewing the messages sent and responses receiving using Wireshark.
 
+The most important functionality to be tested is the ability to log into the server, navigate through the remote file system and upload and download files. Furthermore, the ability to create a directory, delete files and directories and to log out of the server also needed to be tested. Tests of all of these functions were performed for each of the interactions mentioned below.
+
 \subsection{Interaction between the implemented FTP server and client}
 
 \figref{fig:gui} presents an image of the client interacting with the implemented server. From the image, it is clear that there is a unique repository for the user, and that the user is unable to navigate to other user's repositories.
 
-\subsection{Interaction between a standard FTP server and the implemented client}
-In testing this interaction, it was necessary to ensure that the created client and the standard server were compatible and that all of the functionality implemented in the client functioned correctly when paired with a standard server. The server used can be found at ELEN4017.ug.eie.wits.ac.za.
+\secref{sec:ourserverourclient} provides Wireshark excerpts of all of the implemented server client interactions. The excerpts prove that the client and server are compatible and that all of the required FTP functionality can be performed.
 
-The most important functionality to be tested is the ability to log into the server, navigate through the remote file system and upload and download files. Furthermore, the ability to create a directory, delete files and directories and to log out of the server were also tested. Wireshark screenshots indicating this functionality is given in \secref{sec:ourClientWitsServer}. From the images in \secref{sec:ourClientWitsServer}, it is evident that all functionality works as expected when paired with a standard FTP server.
+\figref{fig:multiple} shows that the server is able to handle multiple simultaneous connections. It can also be seen that simultaneous uploads and downloads from different users can be performed.
+
+\subsection{Interaction between a standard FTP server and the implemented client}
+In testing this interaction, it was necessary to ensure that the created client and the standard server were compatible and that all of the functionality implemented in the client functioned correctly when paired with a standard server. The server used can be found at \textit{ELEN4017.ug.eie.wits.ac.za}.
+
+Wireshark screenshots indicating this functionality is given in \secref{sec:ourClientWitsServer}. From the images in \secref{sec:ourClientWitsServer}, it is evident that all functionality works as expected when paired with a standard FTP server.
 
 \subsection{Interaction between the implemented FTP server and a standard FTP client}
-The testing of this interaction is essential to ensure that the server can interact with clients other than the one created. A main purpose of this testing is to ensure that the server returns the correct error code when a requested command has not been implemented.
+The testing of this interaction is essential to ensure that the server can interact with clients other than the one created. This interaction was performed using the Mac OS X client, \textit{ForkLift}.
+
+The results of the tests for this interaction are given in \secref{sec:ourserverstandardclient}. These screenshots again prove that the server is compatible with a standard FTP client.
 
 \section{CRITICAL ANALYSIS}
 An analysis of the successes and limitations of the implemented system is given below.
@@ -367,7 +375,7 @@ QUIT	& Terminates the control connection between the user and the server &  221 
 \section{Results}
 This section contains all of the results collected during the testing of the system. This includes Wireshark excerpts and an image of the client GUI.
 
-\subsection{Interaction between the implemented FTP server and client}
+\subsection{Interaction between the implemented FTP server and client}\label{sec:ourserverourclient}
 This section contains images and Wireshark screenshots depicting the interaction between the implemented client and server when running on two different hosts within the same network.
  
 \begin{figure}[h]
@@ -376,6 +384,94 @@ This section contains images and Wireshark screenshots depicting the interaction
 	\caption{GUI client interacting with the implemented FTP server}
 	\raggedright
 	\label{fig:gui}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{multipleConnections.png}
+	\caption{Multiple clients connected simultaneously to the FTP server}
+	\raggedright
+	\label{fig:multiple}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{ourServerLogin.png}
+	\caption{FTP commands and replies when logging in}
+	\raggedright
+	\label{fig:login}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{ourServerNavigate.png}
+	\caption{FTP commands and replies when navigating the remote file system}
+	\raggedright
+	\label{fig:navigate}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{ourServerUploadText.png}
+	\caption{FTP commands and replies when uploading an ASCII type file}
+	\raggedright
+	\label{fig:textupload}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{ourServerUploadPDF.png}
+	\caption{FTP commands and replies when uploading an image type file}
+	\raggedright
+	\label{fig:pdfupload}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{ourserverDownloadtext.png}
+	\caption{FTP commands and replies when downloading an ASCII type file}
+	\raggedright
+	\label{fig:textdownload}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{ourserverDownloadPDF.png}
+	\caption{FTP commands and replies when downloading an image type file}
+	\raggedright
+	\label{fig:pdfdownload}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{ourServerMKD.png}
+	\caption{FTP commands and replies when creating a directory}
+	\raggedright
+	\label{fig:makeDirectory}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{ourserverDeleteFile.png}
+	\caption{FTP commands and replies when deleting a file}
+	\raggedright
+	\label{fig:delete}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{ourserverdeletefolder.png}
+	\caption{FTP commands and replies when deleting a directory}
+	\raggedright
+	\label{fig:deleteFolder}	
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{ourserverquit.png}
+	\caption{FTP commands and replies when logging out from the server}
+	\raggedright
+	\label{fig:logout}	
 \end{figure}
 
 \subsection{Interaction between a standard FTP server and the implemented client} \label{sec:ourClientWitsServer}
@@ -462,7 +558,7 @@ Wireshark screenshots depicting the interaction between the created client and t
 	\label{fig:logoutWits}	
 \end{figure}
 
-\subsection{Interaction between the implemented FTP server and a standard FTP client}
+\subsection{Interaction between the implemented FTP server and a standard FTP client} \label{sec:ourserverstandardclient}
 This section contains Wireshark excerpts depicting the interaction between the server and a standard client when running on two different hosts within the same network.
 
 \end{appendix}

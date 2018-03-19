@@ -263,8 +263,12 @@ class Example(QtGui.QMainWindow):
     def findExtension(self, filename):
         listOfAscii = ['as','asm','asp','atom','atomcat','cc','cfm','cgi','conf','cpp','css','csv','def','dhtml','dic','dtd','ecma','es6','es7','f77','f90','for','hh','hpp','htm','html','java','jhtml','js','js','json','list','log','md','mm','opml','pas','php','phtml','pl','rb','rss','rt','rtf','rtx','ruby','sgm','sgml','sh','shtml','sql','swift','text','tsv','txt','vbs','vcf','vcs','webapp','wri','xht','xhtml','xml','xsl','xsl','xslt','xspf']
         filetype, encoding = mimetypes.guess_type(filename)
+        filetype=filetype.split("/")
+        filetype=filetype[1]
+        print("filetype " + filetype)
         for i in listOfAscii:
             if i in filetype:
+                print("i is "+ i)
                 return 'TYPE A'
         return 'TYPE I'
 
