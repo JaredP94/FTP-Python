@@ -212,7 +212,7 @@ class FTPServerProtocol(threading.Thread):
 
         connection_info = client_command[5:].split(',')
         self.data_socket_address = '.'.join(connection_info[:4])
-        self.data_socket_address = (int(connection_info[4])<<8) + int(connection_info[5])
+        self.data_socket_port = (int(connection_info[4])<<8) + int(connection_info[5])
         self.sendResponse('200 Get port.\r\n')
 
     def LIST(self, directory_path):
