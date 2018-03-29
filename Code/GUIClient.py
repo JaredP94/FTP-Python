@@ -260,6 +260,8 @@ class Example(QtGui.QMainWindow):
             break
         return (dirnames, filenames)
 
+    # Function to find the file type of the file to be downloaded
+    # from the server
     def findExtension(self, filename):
         listOfAscii = ['as','asm','asp','atom','atomcat','cc','cfm','cgi','conf','cpp','css','csv','def','dhtml','dic','dtd','ecma','es6','es7','f77','f90','for','hh','hpp','htm','html','java','jhtml','js','js','json','list','log','md','mm','opml','pas','php','phtml','pl','rb','rss','rt','rtf','rtx','ruby','sgm','sgml','sh','shtml','sql','swift','text','tsv','txt','vbs','vcf','vcs','webapp','wri','xht','xhtml','xml','xsl','xsl','xslt','xspf']
         filetype, encoding = mimetypes.guess_type(filename)
@@ -272,6 +274,7 @@ class Example(QtGui.QMainWindow):
                 return 'TYPE A'
         return 'TYPE I'
 
+    # Function to inform the server the file type to be downloaded
     def defineDownloadType(self):
         mes= self.findExtension(self.fileNameServer)
         reply= self.send(mes)
@@ -292,6 +295,34 @@ class Example(QtGui.QMainWindow):
 
         self.recievefile(self.fileNameServer)
 
+    # Function to download the required file
+    def recievefile(self,file=''):
+        newip, newport = self.pasv()
+        p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        p.connect((newip, newport))
+        filePathServer = self.getPWDServer() + '/' + file
+        self.action('RETR '+filePathServer)
+        filePath = "/" + self.filePath
+        if not os.path.isdir(filePath):
+            index=filePath.rfind('/')
+            filePath=filePath[:index]
+        filePath = filePath + '/'
+        fileName = filePath + file
+        newfile = open(fileName, 'wb')
+        msg=''
+        aux=':)'
+
+        while aux != b'':
+            time.sleep(.05)
+            sys.stdout.write("\r" "wait")
+            sys.stdout.flush()
+            aux = p.recv(binary_buffer)
+            newfile.write(aux)
+        newfile.close()
+        test= self.recieve()
+
+    # Function to find the file type of the file to be uploaded
+    # to the server
     def defineFileType(self):
         self.filePath ="/" + self.filePath
         file = magic.Magic(mime=True)
@@ -320,6 +351,7 @@ class Example(QtGui.QMainWindow):
         self.action(mes)
         self.sendfile()
 
+    # Function to upload the required file
     def sendfile(self):
         newip, newport = self.pasv()
         p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -357,32 +389,9 @@ class Example(QtGui.QMainWindow):
         f.close()
         self.recieve() 
 
-    def recievefile(self,file=''):
-        newip, newport = self.pasv()
-        p = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        p.connect((newip, newport))
-        filePathServer = self.getPWDServer() + '/' + file
-        self.action('RETR '+filePathServer)
-        filePath = "/" + self.filePath
-        if not os.path.isdir(filePath):
-            index=filePath.rfind('/')
-            filePath=filePath[:index]
-        filePath = filePath + '/'
-        fileName = filePath + file
-        newfile = open(fileName, 'wb')
-        msg=''
-        aux=':)'
-
-        while aux != b'':
-            time.sleep(.05)
-            sys.stdout.write("\r" "wait")
-            sys.stdout.flush()
-            aux = p.recv(binary_buffer)
-            newfile.write(aux)
-        newfile.close()
-        test= self.recieve()
-
-    def listar(self, pathText):
+    # Function to receive the list of files and folders within a
+    # directory and then format the results
+    def listServer(self, pathText):
         mes = ('TYPE A')
         self.action(mes)
         newip, newport = self.pasv()
@@ -443,8 +452,6 @@ class Example(QtGui.QMainWindow):
 # Create a new directory on the server
     def makeNewDirectory(self):
         filePath = self.getPWDServer()
-        print("path in makeDirectory: ")
-        print (filePath)
 
         reply = self.action('CWD '+ filePath)
         time.sleep(.05)
@@ -460,12 +467,10 @@ class Example(QtGui.QMainWindow):
             filePath=filePath[:index]
             filePath = filePath + '/' + self.newDir
 
-        print("path in makeDirectory 2: ")
-        print (filePath)
         self.action('MKD '+filePath)
 
+    # Function to delete a file or folder off of the server
     def delete(self, answer):
-        print("im here")
         if answer.text()== 'OK':
             filePath = self.getPWDServer()
 
@@ -495,6 +500,8 @@ class Example(QtGui.QMainWindow):
         msg.buttonClicked.connect(self.delete) 
         retval = msg.exec_()
 
+    # Function to get the full path to the current location in the 
+    # client file system
     def getTreePath(self, index):
         path = []
         while index.isValid():
@@ -504,6 +511,7 @@ class Example(QtGui.QMainWindow):
             index = index.parent()
         return '/'.join(reversed(path))
 
+    # Function to traverse the file system of the client
     def traverseTreeClient(self,index):
         self.path = self.getTreePath(index)
         self.path = "/" + self.path
@@ -518,6 +526,7 @@ class Example(QtGui.QMainWindow):
             self.fileName = self.model2.itemFromIndex(indexItem).text()
             self.filePath = self.getTreePath(index)
 
+    # Function to update the filesystem of the client
     def updateTreeClient(self):
         ####### Get directory structure #######
         pathText = self.local_dir(self.path)
@@ -558,6 +567,8 @@ class Example(QtGui.QMainWindow):
         self.model2.appendRow(child[0])
         self.view2.expandAll()
 
+    # Function to get the full path to the current location in the 
+    # server file system
     def getTreePathServer(self, index):
         path = []
         while index.isValid():
@@ -567,6 +578,7 @@ class Example(QtGui.QMainWindow):
             index = index.parent()
         return '/'.join(reversed(path))
 
+    # Function to traverse the file system of the server
     def traverseTreeServer(self,index):
         self.pathServer = self.getTreePathServer(index)
         print("Path in traverse server ")
@@ -596,6 +608,7 @@ class Example(QtGui.QMainWindow):
         except:
             pass
 
+    # Function to update the filesystem of the server
     def updateTreeServer(self):
         # Get current path of server
         pathText = self.getPWDServer()
@@ -620,7 +633,7 @@ class Example(QtGui.QMainWindow):
                 child[counter-1].appendRow([child[counter]])
             counter = counter + 1
 
-        folders,files= self.listar(newPath)
+        folders,files= self.listServer(newPath)
         counter2 = 0
         ##### Add folders to tree #####
         for i in folders:
