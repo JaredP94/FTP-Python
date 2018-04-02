@@ -1,3 +1,5 @@
+# Authored by Kayla-Jade Butkow
+
 import os
 import socket
 import sys

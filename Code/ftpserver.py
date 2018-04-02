@@ -1,3 +1,5 @@
+# Authored by Jared Ping
+
 import os
 import socket
 import stat
