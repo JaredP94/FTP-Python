@@ -1,3 +1,5 @@
+# Authored by Jared Ping
+
 import grp
 import pwd
 import time
