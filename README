@@ -1,0 +1,22 @@
+Prerequisites:
+    File Transfer Application must be run using Python 3
+
+Server Setup:
+
+    Suppports any UNIX system and can be run using:
+
+    sudo python ftpserver.py
+
+
+Client Setup:
+    
+    Requires a Mac OS X environment to be run. 
+
+    Imported modules are required and can be installed using macports:
+
+    port install file
+    port install py3-pyqt4
+
+    Client can then be run using:
+
+    python GUIClient.py
