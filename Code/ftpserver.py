@@ -6,7 +6,6 @@ import stat
 import sys
 import threading
 import time
-import magic
 from pathlib import Path
 from utils import fileProperty
 
