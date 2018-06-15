@@ -10,9 +10,9 @@ from pathlib import Path
 from utils import fileProperty
 
 try:
-    host = socket.gethostbyname(socket.gethostname())
+    host = "127.0.0.1"
 except socket.gaierror:
-    host = socket.gethostname()
+    host = socket.gethostbyname(socket.gethostname())
 
 port = 21
 working_directory  = os.getcwd()
