@@ -1,6 +1,6 @@
 # File Transfer Application
 
-Project which utilises Python to implement an FTP server and client
+Project which utilises Python to implement an FTP server (multi-threaded) and client
 
 # Setup:
 ## Prequisites:
